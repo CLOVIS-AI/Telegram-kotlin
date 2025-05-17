@@ -55,6 +55,7 @@ plugins {
 include(
 	"sdk",
 	"entities",
+	"tester",
 
 	"docs:website",
 	"gradle:templates:template-app",
