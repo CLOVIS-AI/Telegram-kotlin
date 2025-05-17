@@ -1,15 +1,13 @@
-# Playground: Gradle
+# Telegram Bot API for Kotlin Multiplatform
 
-<!-- When using the Playground to bootstrap a project, replace this by your project description. -->
-This a template to easily bootstrap your projects.
+This library allows the creation of Telegram bots in Kotlin.
 
-> This project is part of the OpenSavvy Playground.
-> To learn more, visit [this page](docs/playground/README.md).
+> If you want a JVM-only stable complete library, see [this one](https://github.com/kotlin-telegram-bot/kotlin-telegram-bot).
+> Use our project if you want a multiplatform-ready library based on coroutines, do expect that some features will be missing.
 
 ## License
 
-<!-- Mentions under which license you are publishing the project. -->
-<!-- Add the full text to the LICENSE file. -->
+This project is licensed under the [Apache 2.0 license](LICENSE).
 
 ## Contributing
 
