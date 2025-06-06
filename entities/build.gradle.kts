@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 plugins {
 	alias(opensavvyConventions.plugins.base)
 	alias(opensavvyConventions.plugins.kotlin.library)
-	alias(opensavvyConventions.plugins.aligned.kotlinx.serialization)
+	alias(libsCommon.plugins.kotlinx.serialization)
 }
 
 kotlin {
