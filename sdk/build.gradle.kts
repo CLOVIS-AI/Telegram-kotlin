@@ -50,7 +50,7 @@ kotlin {
 	}
 
 	sourceSets.commonTest.dependencies {
-		implementation(libs.prepared)
+		implementation(libsCommon.opensavvy.prepared.kotest)
 	}
 }
 
