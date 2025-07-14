@@ -3,7 +3,7 @@
 [versions]
 kotlinx-coroutines = "1.10.2"           # https://github.com/Kotlin/kotlinx.coroutines/releases
 kotlinx-serialization = "1.8.1"         # https://github.com/Kotlin/kotlinx.serialization/releases
-ktor = "3.1.3"                          # https://ktor.io/docs/releases.html#release-details
+ktor = "3.2.1"                          # https://ktor.io/docs/releases.html#release-details
 
 [plugins]
 
