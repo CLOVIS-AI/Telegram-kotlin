@@ -6,6 +6,7 @@ plugins {
 	alias(opensavvyConventions.plugins.base)
 	alias(opensavvyConventions.plugins.kotlin.library)
 	alias(libsCommon.plugins.kotlinx.serialization)
+	alias(libsCommon.plugins.testBalloon)
 }
 
 kotlin {
@@ -44,7 +45,7 @@ kotlin {
 	}
 
 	sourceSets.commonTest.dependencies {
-		implementation(libs.prepared)
+		implementation(libsCommon.opensavvy.prepared.testBalloon)
 	}
 }
 
