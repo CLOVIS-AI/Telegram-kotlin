@@ -22,12 +22,15 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import opensavvy.telegram.entity.Response
+import opensavvy.telegram.entity.SetMyCommandsParams
 import opensavvy.telegram.entity.Update
 import opensavvy.telegram.entity.User
 
@@ -35,10 +38,12 @@ class TelegramBot internal constructor(
 	private val client: HttpClient,
 ) {
 
-	private suspend inline fun <reified T> HttpResponse.bodyOrThrow(): T {
+	private suspend inline fun <reified T> HttpResponse.bodyOrThrow(
+		isSuccess: (Response<T>) -> Boolean = { true },
+	): T {
 		val response = body<Response<T>>()
 
-		if (response.ok) {
+		if (response.ok && isSuccess(response)) {
 			return response.result!!
 		} else {
 			throw FailedRequestException(buildString {
@@ -48,11 +53,20 @@ class TelegramBot internal constructor(
 		}
 	}
 
+	private suspend fun HttpResponse.trueOrThrow() {
+		bodyOrThrow<Boolean> { it.result == true }
+	}
+
 	suspend fun getMe(): User =
 		client.get("getMe").bodyOrThrow()
 
 	suspend fun getUpdates(): List<Update> =
 		client.get("getUpdates").bodyOrThrow()
+
+	suspend fun setMyCommands(commands: SetMyCommandsParams) =
+		client.post("setMyCommands") {
+			setBody(commands)
+		}.trueOrThrow()
 
 	companion object {
 

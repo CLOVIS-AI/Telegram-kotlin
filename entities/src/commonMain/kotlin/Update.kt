@@ -58,7 +58,15 @@ data class Message(
 	val replyTo: Message?,
 
 	val text: String?,
+
+	val entities: List<MessageEntity>? = emptyList(),
 ) {
+
+	/**
+	 * Returns the text contained by the given [entity].
+	 */
+	fun text(entity: MessageEntity): String? =
+		text?.substring(entity.range)
 
 	@Serializable
 	@JvmInline
