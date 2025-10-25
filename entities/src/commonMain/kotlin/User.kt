@@ -20,6 +20,13 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
+/**
+ * This object represents a Telegram user or bot.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#user)
+ */
 @Serializable
 data class User(
 	val id: Id,
