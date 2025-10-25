@@ -20,6 +20,13 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
+/**
+ * This object represents an incoming update.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#update)
+ */
 @Serializable
 data class Update(
 	@SerialName("update_id")
@@ -42,6 +49,13 @@ data class Update(
 	value class Id(val value: Long)
 }
 
+/**
+ * This object represents a message.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#message)
+ */
 @Serializable
 data class Message(
 	@SerialName("message_id")
