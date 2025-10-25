@@ -45,6 +45,27 @@ data class User(
 
 	@SerialName("language_code")
 	val languageCode: LanguageCode?,
+
+	@SerialName("is_premium")
+	val isPremium: Boolean = false,
+
+	@SerialName("added_to_attachment_menu")
+	val addedToAttachmentMenu: Boolean = false,
+
+	@SerialName("can_join_groups")
+	val canJoinGroups: Boolean?,
+
+	@SerialName("can_read_all_group_messages")
+	val canReadAllGroupMessages: Boolean?,
+
+	@SerialName("supports_inline_queries")
+	val supportsInlineQueries: Boolean?,
+
+	@SerialName("can_connect_to_business")
+	val canConnectToBusiness: Boolean?,
+
+	@SerialName("has_main_web_app")
+	val hasMainWebApp: Boolean?,
 ) {
 
 	@Serializable
