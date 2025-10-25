@@ -18,45 +18,25 @@ package opensavvy.telegram.entity
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.jvm.JvmInline
 
 /**
- * [IETF language tag](https://en.wikipedia.org/wiki/IETF_language_tag).
- */
-@Serializable
-@JvmInline
-value class LanguageCode(val code: String)
-
-/**
- * Accent colors.
+ * This object describes the types of gifts that can be gifted to a user or a chat.
  *
  * ### External resources
  *
- * - [Official documentation](https://core.telegram.org/bots/api#accent-colors)
+ * - [Official documentation](https://core.telegram.org/bots/api#acceptedgifttypes)
  */
 @Serializable
-@JvmInline
-value class AccentColor(val id: Int)
+data class AcceptedGiftTypes(
+	@SerialName("unlimited_gifts")
+	val unlimitedGifts: Boolean?,
 
-/**
- * This object represents a point on the map.
- *
- * ### External resources
- *
- * - [Official resources](https://core.telegram.org/bots/api#location)
- */
-@Serializable
-data class Location(
-	val latitude: Float,
-	val longitude: Float,
+	@SerialName("limited_gifts")
+	val limitedGifts: Boolean?,
 
-	@SerialName("horizontal_accuracy")
-	val horizontalAccuracy: Float?,
+	@SerialName("unique_gifts")
+	val uniqueGifts: Boolean?,
 
-	@SerialName("live_period")
-	val livePeriod: Int?,
-
-	val heading: Int?,
-
-	val proximityAlertStatus: Int?,
+	@SerialName("premium_subscription")
+	val premiumSubscription: Boolean?,
 )

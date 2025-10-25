@@ -72,3 +72,26 @@ data class User(
 	@JvmInline
 	value class Id(val value: Long)
 }
+
+/**
+ * Describes the birthdate of a user.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#birthdate)
+ */
+@Serializable
+data class BirthDate(
+	/**
+	 * Day of the user's birth; 1-31
+	 */
+	val day: Int,
+	/**
+	 * Month of the user's birth; 1-12
+	 */
+	val month: Int,
+	/**
+	 * Year of the user's birth
+	 */
+	val year: Int?,
+)
