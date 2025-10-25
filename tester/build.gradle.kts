@@ -23,5 +23,6 @@ kotlin {
 
 	sourceSets.commonTest.dependencies {
 		implementation(libsCommon.opensavvy.prepared.testBalloon)
+		implementation(libsCommon.kotlin.test)
 	}
 }
