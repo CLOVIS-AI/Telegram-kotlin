@@ -142,5 +142,5 @@ sealed class BotCommandScope {
 data class SetMyCommandsParams(
 	val commands: List<BotCommand>,
 	val scope: BotCommandScope? = null,
-	val languageCode: String? = null,
+	val languageCode: LanguageCode? = null,
 )

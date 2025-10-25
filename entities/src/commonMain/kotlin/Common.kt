@@ -16,38 +16,12 @@
 
 package opensavvy.telegram.entity
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
 /**
- * This object represents a Telegram user or bot.
- *
- * ### External resources
- *
- * - [Official documentation](https://core.telegram.org/bots/api#user)
+ * [IETF language tag](https://en.wikipedia.org/wiki/IETF_language_tag).
  */
 @Serializable
-data class User(
-	val id: Id,
-
-	@SerialName("is_bot")
-	val isBot: Boolean,
-
-	@SerialName("first_name")
-	val firstName: String,
-
-	@SerialName("last_name")
-	val lastName: String?,
-
-	@SerialName("username")
-	val username: String?,
-
-	@SerialName("language_code")
-	val languageCode: LanguageCode?,
-) {
-
-	@Serializable
-	@JvmInline
-	value class Id(val value: Long)
-}
+@JvmInline
+value class LanguageCode(val code: String)
