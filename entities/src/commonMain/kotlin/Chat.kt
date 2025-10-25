@@ -20,12 +20,27 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
+/**
+ * This object represents a chat.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#chat)
+ */
 @Serializable
 data class Chat(
 	val id: Id,
 	val type: Type,
 	val title: String?,
 	val username: String?,
+	@SerialName("first_name")
+	val firstName: String?,
+	@SerialName("last_name")
+	val lastName: String?,
+	@SerialName("is_forum")
+	val isForum: Boolean? = false,
+	@SerialName("is_direct_messages")
+	val isDirectMessages: Boolean? = false,
 ) {
 
 	@Serializable
