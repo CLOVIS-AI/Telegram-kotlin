@@ -20,6 +20,13 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
+/**
+ * This object represents a Telegram user or bot.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#user)
+ */
 @Serializable
 data class User(
 	val id: Id,
@@ -35,9 +42,56 @@ data class User(
 
 	@SerialName("username")
 	val username: String?,
+
+	@SerialName("language_code")
+	val languageCode: LanguageCode?,
+
+	@SerialName("is_premium")
+	val isPremium: Boolean = false,
+
+	@SerialName("added_to_attachment_menu")
+	val addedToAttachmentMenu: Boolean = false,
+
+	@SerialName("can_join_groups")
+	val canJoinGroups: Boolean?,
+
+	@SerialName("can_read_all_group_messages")
+	val canReadAllGroupMessages: Boolean?,
+
+	@SerialName("supports_inline_queries")
+	val supportsInlineQueries: Boolean?,
+
+	@SerialName("can_connect_to_business")
+	val canConnectToBusiness: Boolean?,
+
+	@SerialName("has_main_web_app")
+	val hasMainWebApp: Boolean?,
 ) {
 
 	@Serializable
 	@JvmInline
 	value class Id(val value: Long)
 }
+
+/**
+ * Describes the birthdate of a user.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#birthdate)
+ */
+@Serializable
+data class BirthDate(
+	/**
+	 * Day of the user's birth; 1-31
+	 */
+	val day: Int,
+	/**
+	 * Month of the user's birth; 1-12
+	 */
+	val month: Int,
+	/**
+	 * Year of the user's birth
+	 */
+	val year: Int?,
+)

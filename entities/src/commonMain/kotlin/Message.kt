@@ -18,7 +18,53 @@ package opensavvy.telegram.entity
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmInline
 
+/**
+ * This object represents a message.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#message)
+ */
+@Serializable
+data class Message(
+	@SerialName("message_id")
+	val id: Id,
+
+	val from: User?,
+
+	@SerialName("sender_chat")
+	val senderChat: Chat?,
+
+	val chat: Chat,
+
+	@SerialName("reply_to_message")
+	val replyTo: Message?,
+
+	val text: String?,
+
+	val entities: List<MessageEntity>? = emptyList(),
+) {
+
+	/**
+	 * Returns the text contained by the given [entity].
+	 */
+	fun text(entity: MessageEntity): String? =
+		text?.substring(entity.range)
+
+	@Serializable
+	@JvmInline
+	value class Id(val value: Long)
+}
+
+/**
+ * This object represents one special entity in a text message. For example, hashtags, usernames, URLs, etc.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#messageentity)
+ */
 @Serializable
 sealed class MessageEntity {
 
@@ -27,7 +73,7 @@ sealed class MessageEntity {
 	abstract val length: Int
 
 	val range: IntRange
-		get() = offset .. (offset + length)
+		get() = offset..(offset + length)
 
 	/**
 	 * Example: `@user`.

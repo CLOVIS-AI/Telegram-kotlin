@@ -16,18 +16,27 @@
 
 package opensavvy.telegram.entity
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * The response Telegram sends after any request.
+ * This object describes the types of gifts that can be gifted to a user or a chat.
  *
  * ### External resources
  *
- * - [Official documentation](https://core.telegram.org/bots/api#authorizing-your-bot)
+ * - [Official documentation](https://core.telegram.org/bots/api#acceptedgifttypes)
  */
 @Serializable
-data class Response<T>(
-	val ok: Boolean,
-	val description: String?,
-	val result: T? = null,
+data class AcceptedGiftTypes(
+	@SerialName("unlimited_gifts")
+	val unlimitedGifts: Boolean?,
+
+	@SerialName("limited_gifts")
+	val limitedGifts: Boolean?,
+
+	@SerialName("unique_gifts")
+	val uniqueGifts: Boolean?,
+
+	@SerialName("premium_subscription")
+	val premiumSubscription: Boolean?,
 )

@@ -21,30 +21,42 @@ import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
 /**
- * This object represents an incoming update.
+ * [IETF language tag](https://en.wikipedia.org/wiki/IETF_language_tag).
+ */
+@Serializable
+@JvmInline
+value class LanguageCode(val code: String)
+
+/**
+ * Accent colors.
  *
  * ### External resources
  *
- * - [Official documentation](https://core.telegram.org/bots/api#update)
+ * - [Official documentation](https://core.telegram.org/bots/api#accent-colors)
  */
 @Serializable
-data class Update(
-	@SerialName("update_id")
-	val id: Id,
+@JvmInline
+value class AccentColor(val id: Int)
 
-	val message: Message?,
+/**
+ * This object represents a point on the map.
+ *
+ * ### External resources
+ *
+ * - [Official resources](https://core.telegram.org/bots/api#location)
+ */
+@Serializable
+data class Location(
+	val latitude: Float,
+	val longitude: Float,
 
-	@SerialName("edited_message")
-	val editedMessage: Message?,
+	@SerialName("horizontal_accuracy")
+	val horizontalAccuracy: Float?,
 
-	@SerialName("channel_post")
-	val channelPost: Message?,
+	@SerialName("live_period")
+	val livePeriod: Int?,
 
-	@SerialName("edited_channel_post")
-	val editedChannelPost: Message?,
-) {
+	val heading: Int?,
 
-	@Serializable
-	@JvmInline
-	value class Id(val value: Long)
-}
+	val proximityAlertStatus: Int?,
+)

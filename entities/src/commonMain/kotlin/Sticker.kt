@@ -16,18 +16,11 @@
 
 package opensavvy.telegram.entity
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/**
- * The response Telegram sends after any request.
- *
- * ### External resources
- *
- * - [Official documentation](https://core.telegram.org/bots/api#authorizing-your-bot)
- */
 @Serializable
-data class Response<T>(
-	val ok: Boolean,
-	val description: String?,
-	val result: T? = null,
+data class Sticker(
+	@SerialName("file_id")
+	val id: String,
 )
