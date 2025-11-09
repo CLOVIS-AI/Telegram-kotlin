@@ -17,22 +17,19 @@
 package opensavvy.telegram.sdk
 
 import io.ktor.client.*
-import io.ktor.client.call.body
+import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
-import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.serialization.json.Json
 import opensavvy.telegram.entity.Response
 import opensavvy.telegram.entity.SetMyCommandsParams
 import opensavvy.telegram.entity.Update
 import opensavvy.telegram.entity.User
+import opensavvy.telegram.entity.serialization.TelegramJson
 
 class TelegramBot internal constructor(
 	private val client: HttpClient,
@@ -83,10 +80,7 @@ class TelegramBot internal constructor(
 				}
 
 				install(ContentNegotiation) {
-					json(Json {
-						ignoreUnknownKeys = true
-						explicitNulls = false
-					})
+					json(TelegramJson)
 				}
 			}
 		)

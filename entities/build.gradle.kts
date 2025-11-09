@@ -1,6 +1,7 @@
 @file:OptIn(ExperimentalWasmDsl::class)
 
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.internal.platform.wasm.WasmPlatforms.wasmJs
 
 plugins {
 	alias(opensavvyConventions.plugins.base)
@@ -47,6 +48,10 @@ kotlin {
 	sourceSets.commonTest.dependencies {
 		implementation(libsCommon.opensavvy.prepared.testBalloon)
 		implementation(libsCommon.kotlin.test)
+	}
+
+	sourceSets.all {
+		languageSettings.optIn("kotlin.time.ExperimentalTime")
 	}
 }
 
