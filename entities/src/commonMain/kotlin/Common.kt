@@ -58,5 +58,6 @@ data class Location(
 
 	val heading: Int?,
 
-	val proximityAlertStatus: Int?,
+	@SerialName("proximity_alert_radius")
+	val proximityAlertRadius: Int?,
 )
