@@ -462,13 +462,13 @@ data class Poll(
 	val explanation: String?,
 
 	@SerialName("explanation_entities")
-	val explanationEntities: List<MessageEntity>,
+	val explanationEntities: List<MessageEntity> = emptyList(),
 
 	@SerialName("open_period")
-	val openDuration: @Serializable(with = DurationSecondsSerializer::class) Duration,
+	val openDuration: @Serializable(with = DurationSecondsSerializer::class) Duration?,
 
 	@SerialName("close_date")
-	val closeDate: @Serializable(with = UnixSecondsSerializer::class) Instant,
+	val closeDate: @Serializable(with = UnixSecondsSerializer::class) Instant?,
 ) {
 
 	@Serializable
@@ -485,6 +485,8 @@ data class Poll(
 	@Serializable
 	data class Option(
 		val text: String,
+
+		@SerialName("text_entities")
 		val textEntities: List<MessageEntity> = emptyList(),
 
 		@SerialName("voter_count")
@@ -500,3 +502,42 @@ data class Poll(
 		Quiz,
 	}
 }
+
+/**
+ * This object contains information about one answer option in a poll to be sent.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#inputpolloption)
+ */
+@Serializable
+data class InputPollOption(
+	val text: String,
+
+	@SerialName("text_parse_mode")
+	val textParseMode: String? = null,
+
+	@SerialName("text_entities")
+	val textEntities: List<MessageEntity>? = null,
+)
+
+/**
+ * This object represents an answer of a user in a non-anonymous poll.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#pollanswer)
+ */
+@Serializable
+data class PollAnswer(
+	@SerialName("poll_id")
+	val pollId: Poll.Id,
+
+	@SerialName("voter_chat")
+	val voterChat: Chat?,
+
+	val user: User?,
+
+	@SerialName("option_ids")
+	val optionIds: List<Int>,
+)
