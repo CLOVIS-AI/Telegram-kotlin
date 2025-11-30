@@ -828,6 +828,84 @@ data class LinkPreviewOptions(
 )
 
 /**
+ * Describes reply parameters for the message that is being sent.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#replyparameters)
+ */
+@Serializable
+data class ReplyParameters(
+	/** Identifier of the message that will be replied to in the current chat, or in the chat [chatId] if it is specified. */
+	@SerialName("message_id")
+	val messageId: Message.Id,
+
+	/** If the message to be replied to is from a different chat, unique identifier for the chat or username of the channel (in the format `@channelusername`). */
+	@SerialName("chat_id")
+	val chatId: ChatIdentifier?,
+
+	/** Pass true if the message should be sent even if the specified message to be replied to is not found. */
+	@SerialName("allow_sending_without_reply")
+	val allowSendingWithoutReply: Boolean? = null,
+
+	/** Quoted part of the message to be replied to; 0-1024 characters after entities parsing. */
+	val quote: String? = null,
+
+	/** Mode for parsing entities in the quote. */
+	@SerialName("quote_parse_mode")
+	val quoteParseMode: String? = null,
+
+	/** A list of special entities that appear in the quote. It can be specified instead of [quoteParseMode]. */
+	@SerialName("quote_entities")
+	val quoteEntities: List<MessageEntity>? = null,
+
+	/** Position of the quote in the original message in UTF-16 code units. */
+	@SerialName("quote_position")
+	val quotePosition: Int? = null,
+
+	/** Identifier of the specific checklist task to be replied to. */
+	@SerialName("checklist_task_id")
+	val checklistTaskId: Int? = null,
+) {
+	/**
+	 * Identifier for a chat that can be provided either as a numeric [Chat.Id] or as a username string.
+	 * Encoded as a JSON number for ids and a JSON string for usernames.
+	 */
+	@Serializable(with = ChatIdentifier.Serializer::class)
+	sealed class ChatIdentifier {
+		data class Id(val id: Chat.Id) : ChatIdentifier()
+		data class Username(val username: String) : ChatIdentifier()
+
+		object Serializer : KSerializer<ChatIdentifier> {
+			override val descriptor: SerialDescriptor
+				get() = SerialDescriptor(
+					"opensavvy.telegram.entity.ReplyParameters.ChatIdentifier",
+					JsonPrimitive.serializer().descriptor,
+				)
+
+			override fun serialize(encoder: Encoder, value: ChatIdentifier) {
+				val primitive = when (value) {
+					is Id -> JsonPrimitive(value.id.value)
+					is Username -> JsonPrimitive(value.username)
+				}
+				encoder.encodeSerializableValue(JsonPrimitive.serializer(), primitive)
+			}
+
+			override fun deserialize(decoder: Decoder): ChatIdentifier {
+				val primitive = decoder.decodeSerializableValue(JsonPrimitive.serializer())
+				return if (primitive.isString) {
+					Username(primitive.content)
+				} else {
+					// Telegram uses 64-bit identifiers for chats
+					val id = primitive.content.toLong()
+					Id(Chat.Id(id))
+				}
+			}
+		}
+	}
+}
+
+/**
  * This object represents a service message about a change in auto-delete timer settings.
  *
  * ### External resources
