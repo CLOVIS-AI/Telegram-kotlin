@@ -405,8 +405,73 @@ data class ChecklistTask(
 
 	@Serializable
 	@JvmInline
-	value class Id(val id: String)
+	value class Id(val id: Int)
 }
+
+/**
+ * Describes a task to add to a checklist.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#inputchecklisttask)
+ */
+@Serializable
+data class InputChecklistTask(
+	val id: ChecklistTask.Id,
+
+	val text: String,
+
+	@SerialName("parse_mode")
+	val parseMode: String? = null,
+
+	@SerialName("text_entities")
+	val textEntities: List<MessageEntity>? = null,
+)
+
+/**
+ * Describes a checklist to create.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#inputchecklist)
+ */
+@Serializable
+data class InputChecklist(
+	val title: String,
+
+	@SerialName("parse_mode")
+	val parseMode: String? = null,
+
+	@SerialName("title_entities")
+	val titleEntities: List<MessageEntity>? = null,
+
+	val tasks: List<InputChecklistTask>,
+
+	@SerialName("others_can_add_tasks")
+	val othersCanAddTasks: Boolean? = null,
+
+	@SerialName("others_can_mark_tasks_as_done")
+	val othersCanMarkTasksAsDone: Boolean? = null,
+)
+
+/**
+ * Describes a service message about checklist tasks marked as done or not done.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#checklisttasksdone)
+ */
+@Serializable
+data class ChecklistTasksDone(
+	@SerialName("checklist_message")
+	val checklistMessage: Message?,
+
+	@SerialName("marked_as_done_task_ids")
+	val markedAsDoneTaskIds: List<ChecklistTask.Id> = emptyList(),
+
+	@SerialName("marked_as_not_done_task_ids")
+	val markedAsNotDoneTaskIds: List<ChecklistTask.Id>,
+)
 
 /**
  * Value of the dice, 1-6 for “🎲”, “🎯” and “🎳” base emoji, 1-5 for “🏀” and “⚽” base emoji, 1-64 for “🎰” base emoji

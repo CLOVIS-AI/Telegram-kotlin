@@ -991,31 +991,6 @@ data class InaccessibleMessage(
 ) : MayBeInaccessibleMessage
 
 /**
- * Describes a service message about checklist tasks marked as done or not done.
- *
- * ### External resources
- *
- * - [Official documentation](https://core.telegram.org/bots/api#checklisttasksdone)
- */
-@Serializable
-data class ChecklistTasksDone(
-	/**
-	 * Message containing the checklist whose tasks were marked as done or not done.
-	 * Note: the embedded [Message] will not contain the `reply_to_message` field even if it is itself a reply.
-	 */
-	@SerialName("checklist_message")
-	val checklistMessage: Message?,
-
-	/** Identifiers of the tasks that were marked as done. */
-	@SerialName("marked_as_done_task_ids")
-	val markedAsDoneTaskIds: List<Int> = emptyList(),
-
-	/** Identifiers of the tasks that were marked as not done. */
-	@SerialName("marked_as_not_done_task_ids")
-	val markedAsNotDoneTaskIds: List<Int> = emptyList(),
-)
-
-/**
  * Describes a service message about tasks added to a checklist.
  *
  * ### External resources
