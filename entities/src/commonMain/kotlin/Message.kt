@@ -16,9 +16,74 @@
 
 package opensavvy.telegram.entity
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
+import opensavvy.telegram.entity.serialization.DurationSecondsSerializer
+import opensavvy.telegram.entity.serialization.TelegramJson
+import opensavvy.telegram.entity.serialization.UnixSecondsSerializer
 import kotlin.jvm.JvmInline
+import kotlin.time.Duration
+import kotlin.time.Instant
+
+/**
+ * This object describes a message that can be inaccessible to the bot.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#maybeinaccessiblemessage)
+ */
+@Serializable(with = MayBeInaccessibleMessage.Serializer::class)
+sealed interface MayBeInaccessibleMessage {
+
+	object Serializer : KSerializer<MayBeInaccessibleMessage> {
+		override val descriptor: SerialDescriptor
+			get() = SerialDescriptor("opensavvy.telegram.entity.MayBeInaccessibleMessage", JsonObject.serializer().descriptor)
+
+		override fun serialize(encoder: Encoder, value: MayBeInaccessibleMessage) {
+			val json = when (value) {
+				is InaccessibleMessage -> {
+					val result = TelegramJson.encodeToJsonElement(value) as JsonObject
+					JsonObject(result + ("date" to JsonPrimitive(0)))
+				}
+
+				is Message -> TelegramJson.encodeToJsonElement(value) as JsonObject
+			}
+
+			encoder.encodeSerializableValue(JsonObject.serializer(), json)
+		}
+
+		override fun deserialize(decoder: Decoder): MayBeInaccessibleMessage {
+			val json = decoder.decodeSerializableValue(JsonObject.serializer())
+
+			return if (json["date"] == JsonPrimitive(0)) {
+				TelegramJson.decodeFromJsonElement<InaccessibleMessage>(json)
+			} else {
+				TelegramJson.decodeFromJsonElement<Message>(json)
+			}
+		}
+	}
+}
+
+/**
+ * This object represents a unique message identifier.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#messageid)
+ */
+@Serializable
+data class MessageId(
+	@SerialName("message_id")
+	val id: Message.Id,
+)
 
 /**
  * This object represents a message.
@@ -32,20 +97,299 @@ data class Message(
 	@SerialName("message_id")
 	val id: Id,
 
+	@SerialName("message_thread_id")
+	val messageThreadId: Int?,
+
+	@SerialName("direct_messages_topic")
+	val directMessagesTopic: DirectMessagesTopic?,
+
 	val from: User?,
 
 	@SerialName("sender_chat")
 	val senderChat: Chat?,
 
+	@SerialName("sender_boost_count")
+	val senderBoostCount: Int?,
+
+	@SerialName("sender_business_bot")
+	val senderBusinessBot: User?,
+
+	@Serializable(with = UnixSecondsSerializer::class)
+	val date: Instant,
+
+	@SerialName("business_connection_id")
+	val businessConnectionId: String?,
+
 	val chat: Chat,
+
+	@SerialName("forward_origin")
+	val forwardOrigin: MessageOrigin?,
+
+	@SerialName("is_topic_message")
+	val isTopicMessage: Boolean = false,
+
+	@SerialName("is_automatic_forward")
+	val isAutomaticForward: Boolean = false,
 
 	@SerialName("reply_to_message")
 	val replyTo: Message?,
 
+	@SerialName("external_reply")
+	val externalReply: ExternalReplyInfo?,
+
+	/** For replies that quote part of the original message, the quoted part of the message. */
+	@SerialName("quote")
+	val quote: TextQuote?,
+
+	/** For replies to a story, the original story. */
+	@SerialName("reply_to_story")
+	val replyToStory: Story?,
+
+	/** Identifier of the specific checklist task that is being replied to. */
+	@SerialName("reply_to_checklist_task_id")
+	val replyToChecklistTaskId: Int?,
+
+	/** Bot through which the message was sent. */
+	@SerialName("via_bot")
+	val viaBot: User?,
+
+	/** Date the message was last edited in Unix time. */
+	@SerialName("edit_date")
+	@Serializable(with = UnixSecondsSerializer::class)
+	val editDate: Instant?,
+
+	/** True, if the message can't be forwarded. */
+	@SerialName("has_protected_content")
+	val hasProtectedContent: Boolean = false,
+
+	/** True, if the message was sent by an implicit action (away/greeting/scheduled). */
+	@SerialName("is_from_offline")
+	val isFromOffline: Boolean = false,
+
+	/** True, if the message is a paid post. */
+	@SerialName("is_paid_post")
+	val isPaidPost: Boolean = false,
+
+	/** The unique identifier of a media message group this message belongs to. */
+	@SerialName("media_group_id")
+	val mediaGroupId: String?,
+
+	/** Signature of the post author for messages in channels, or the custom title of an anonymous group administrator. */
+	@SerialName("author_signature")
+	val authorSignature: String?,
+
+	/** The number of Telegram Stars that were paid by the sender of the message to send it. */
+	@SerialName("paid_star_count")
+	val paidStarCount: Int?,
+
 	val text: String?,
 
 	val entities: List<MessageEntity>? = emptyList(),
-) {
+
+	@SerialName("link_preview_options")
+	val linkPreviewOptions: LinkPreviewOptions?,
+
+	/** Information about suggested post parameters if the message is a suggested post in a channel direct messages chat. */
+	@SerialName("suggested_post_info")
+	val suggestedPostInfo: SuggestedPostInfo?,
+
+	@SerialName("effect_id")
+	val effectId: String?,
+
+	val animation: Animation?,
+
+	val audio: Audio?,
+
+	val document: Document?,
+
+	@SerialName("paid_media")
+	val paidMedia: PaidMediaInfo?,
+
+	val photo: List<PhotoSize>?,
+
+	val sticker: Sticker?,
+
+	val story: Story?,
+
+	val video: Video?,
+
+	@SerialName("video_note")
+	val videoNote: VideoNote?,
+
+	val voice: Voice?,
+
+	val caption: String?,
+
+	@SerialName("caption_entities")
+	val captionEntities: List<MessageEntity>? = emptyList(),
+
+	@SerialName("show_caption_above_media")
+	val showCaptionAboveMedia: Boolean = false,
+
+	@SerialName("has_media_spoiler")
+	val hasMediaSpoiler: Boolean = false,
+
+	val checklist: Checklist?,
+
+	val contact: Contact?,
+
+	val dice: Dice?,
+
+	val game: Game?,
+
+	val poll: Poll?,
+
+	val venue: Venue?,
+
+	val location: Location?,
+
+	@SerialName("new_chat_members")
+	val newChatMembers: List<User> = emptyList(),
+
+	@SerialName("left_chat_member")
+	val leftChatMember: User?,
+
+	@SerialName("new_chat_title")
+	val newChatTitle: String?,
+
+	@SerialName("new_chat_photo")
+	val newChatPhoto: List<PhotoSize> = emptyList(),
+
+	@SerialName("delete_chat_photo")
+	val deletedChatPhoto: Boolean = false,
+
+	@SerialName("group_chat_created")
+	val groupChatCreated: Boolean = false,
+
+	@SerialName("supergroup_chat_created")
+	val superGroupChatCreated: Boolean = false,
+
+	@SerialName("channel_chat_created")
+	val channelChatCreated: Boolean = false,
+
+	@SerialName("message_auto_delete_timer_changed")
+	val messageAutoDeleteTimerChanged: MessageAutoDeleteTimerChanged?,
+
+	@SerialName("migrate_to_chat_id")
+	val migrateToChat: Chat.Id?,
+
+	@SerialName("migrate_from_chat_id")
+	val migrateFromChat: Chat.Id?,
+
+	@SerialName("pinned_message")
+	val pinnedMessage: MayBeInaccessibleMessage?,
+
+	val invoice: Invoice?,
+
+	@SerialName("successful_payment")
+	val successfulPayment: SuccessfulPayment?,
+
+	@SerialName("refunded_payment")
+	val refundedPayment: RefundedPayment?,
+
+	@SerialName("users_shared")
+	val usersShared: UsersShared?,
+
+	@SerialName("chat_shared")
+	val chatShared: ChatShared?,
+
+	val gift: GiftInfo?,
+
+	@SerialName("unique_gift")
+	val uniqueGift: UniqueGiftInfo?,
+
+	@SerialName("connected_website")
+	val connectedWebsite: String?,
+
+	@SerialName("write_access_allowed")
+	val writeAccess: WriteAccessAllowed?,
+
+	@SerialName("passport_data")
+	val passportData: PassportData?,
+
+	@SerialName("proximity_alert_triggered")
+	val proximityAlertTriggered: ProximityAlertTriggered?,
+
+	@SerialName("boost_added")
+	val boostAdded: ChatBoostAdded?,
+
+	@SerialName("chat_background_set")
+	val chatBackgroundSet: ChatBackground?,
+
+	@SerialName("checklist_tasks_done")
+	val checklistTasksDone: ChecklistTasksDone?,
+
+	@SerialName("checklist_tasks_added")
+	val checklistTasksAdded: ChecklistTasksAdded?,
+
+	@SerialName("direct_message_price_changed")
+	val directMessagePriceChanged: DirectMessagePriceChanged?,
+
+	@SerialName("forum_topic_created")
+	val forumTopicCreated: ForumTopicCreated?,
+
+	@SerialName("forum_topic_edited")
+	val forumTopicEdited: ForumTopicEdited?,
+
+	@SerialName("forum_topic_closed")
+	val forumTopicClosed: ForumTopicClosed?,
+
+	@SerialName("forum_topic_reopened")
+	val forumTopicReopened: ForumTopicReopened?,
+
+	@SerialName("general_forum_topic_hidden")
+	val generalForumTopicHidden: GeneralForumTopicHidden?,
+
+	@SerialName("general_forum_topic_unhidden")
+	val generalForumTopicUnhidden: GeneralForumTopicUnhidden?,
+
+	@SerialName("giveaway_created")
+	val giveawayCreated: GiveawayCreated?,
+
+	val giveaway: Giveaway?,
+
+	@SerialName("giveaway_winners")
+	val giveawayWinners: GiveawayWinners?,
+
+	@SerialName("giveaway_completed")
+	val giveawayCompleted: GiveawayCompleted?,
+
+	@SerialName("paid_message_price_changed")
+	val paidMessagePriceChanged: PaidMessagePriceChanged?,
+
+	@SerialName("suggested_post_approved")
+	val suggestedPostApproved: SuggestedPostApproved?,
+
+	@SerialName("suggested_post_approval_failed")
+	val suggestedPostApprovalFailed: SuggestedPostApprovalFailed?,
+
+	@SerialName("suggested_post_declined")
+	val suggestedPostDeclined: SuggestedPostDeclined?,
+
+	@SerialName("suggested_post_paid")
+	val suggestedPostPaid: SuggestedPostPaid?,
+
+	@SerialName("suggested_post_refunded")
+	val suggestedPostRefunded: SuggestedPostRefunded?,
+
+	@SerialName("video_chat_scheduled")
+	val videoChatScheduled: VideoChatScheduled?,
+
+	@SerialName("video_chat_started")
+	val videoChatStarted: VideoChatStarted?,
+
+	@SerialName("video_chat_ended")
+	val videoChatEnded: VideoChatEnded?,
+
+	@SerialName("video_chat_participants_invited")
+	val videoChatParticipantsInvited: VideoChatParticipantsInvited?,
+
+	@SerialName("web_app_data")
+	val webAppData: WebAppData?,
+
+	@SerialName("reply_markup")
+	val replyMarkup: InlineKeyboardMarkup?,
+) : MayBeInaccessibleMessage {
 
 	/**
 	 * Returns the text contained by the given [entity].
@@ -262,3 +606,427 @@ sealed class MessageEntity {
 		val emojiId: String,
 	) : MessageEntity()
 }
+
+/**
+ * This object contains information about the quoted part of a message that is replied to by the given message.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#textquote)
+ */
+@Serializable
+data class TextQuote(
+	/** Text of the quoted part of a message that is replied to by the given message. */
+	val text: String,
+
+	/**
+	 * Optional. Special entities that appear in the quote. Currently, only bold, italic, underline,
+	 * strikethrough, spoiler, and custom_emoji entities are kept in quotes.
+	 */
+	val entities: List<MessageEntity>? = emptyList(),
+
+	/** Approximate quote position in the original message in UTF-16 code units as specified by the sender. */
+	val position: Int,
+
+	/** True, if the quote was chosen manually by the message sender. Otherwise, the quote was added automatically by the server. */
+	@SerialName("is_manual")
+	val isManual: Boolean = false,
+)
+
+/**
+ * Describes a topic of a direct messages chat.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#directmessagestopic)
+ */
+@Serializable
+data class DirectMessagesTopic(
+	@SerialName("topic_id")
+	val id: Long,
+
+	val user: User?,
+)
+
+/**
+ * This object describes the origin of a message.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#messageorigin)
+ */
+@Serializable
+sealed class MessageOrigin {
+
+	abstract val date: Instant
+
+	/**
+	 * The message was originally sent by a known user.
+	 *
+	 * ### External resources
+	 *
+	 * - [Official documentation](https://core.telegram.org/bots/api#messageoriginuser)
+	 */
+	@Serializable
+	@SerialName("user")
+	data class User(
+		@Serializable(with = UnixSecondsSerializer::class)
+		override val date: Instant,
+
+		@SerialName("sender_user")
+		val sender: opensavvy.telegram.entity.User,
+	) : MessageOrigin()
+
+	/**
+	 * The message was originally sent by an unknown user.
+	 *
+	 * ### External resources
+	 *
+	 * - [Official documentation](https://core.telegram.org/bots/api#messageoriginhiddenuser)
+	 */
+	@Serializable
+	@SerialName("hidden_user")
+	data class HiddenUser(
+		@Serializable(with = UnixSecondsSerializer::class)
+		override val date: Instant,
+
+		@SerialName("sender_user_name")
+		val senderUserName: String,
+	) : MessageOrigin()
+
+	/**
+	 * The message was originally sent on behalf of a chat to a group chat.
+	 *
+	 * ### External resources
+	 *
+	 * - [Official documentation](https://core.telegram.org/bots/api#messageoriginchat)
+	 */
+	@Serializable
+	@SerialName("chat")
+	data class Chat(
+		@Serializable(with = UnixSecondsSerializer::class)
+		override val date: Instant,
+
+		@SerialName("sender_chat")
+		val sender: opensavvy.telegram.entity.Chat,
+
+		@SerialName("author_signature")
+		val authorSignature: String?,
+	) : MessageOrigin()
+
+	/**
+	 * The message was originally sent to a channel chat.
+	 *
+	 * ### External resources
+	 *
+	 * - [Official documentation](https://core.telegram.org/bots/api#messageoriginchannel)
+	 */
+	@Serializable
+	@SerialName("channel")
+	data class Channel(
+		@Serializable(with = UnixSecondsSerializer::class)
+		override val date: Instant,
+
+		val chat: opensavvy.telegram.entity.Chat,
+
+		@SerialName("message_id")
+		val message: Message.Id,
+
+		@SerialName("author_signature")
+		val authorSignature: String?,
+	) : MessageOrigin()
+}
+
+/**
+ * This object contains information about a message that is being replied to, which may come from another chat or forum topic.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#externalreplyinfo)
+ */
+@Serializable
+data class ExternalReplyInfo(
+	val origin: MessageOrigin,
+	val chat: Chat?,
+
+	@SerialName("message_id")
+	val message: Message.Id?,
+
+	@SerialName("link_preview_options")
+	val linkPreviewOptions: LinkPreviewOptions?,
+
+	val animation: Animation?,
+
+	val audio: Audio?,
+
+	val document: Document?,
+
+	@SerialName("paid_media")
+	val paidMedia: PaidMediaInfo?,
+
+	val photo: List<PhotoSize>?,
+
+	val sticker: Sticker?,
+
+	val story: Story?,
+
+	val video: Video?,
+
+	@SerialName("video_note")
+	val videoNote: VideoNote?,
+
+	val voice: Voice?,
+
+	@SerialName("has_media_spoiler")
+	val hasMediaSpoiler: Boolean = false,
+
+	val checklist: Checklist?,
+
+	val contact: Contact?,
+
+	val dice: Dice?,
+
+	val game: Game?,
+
+	// Fields allowed in ExternalReplyInfo per spec
+	val giveaway: Giveaway?,
+
+	@SerialName("giveaway_winners")
+	val giveawayWinners: GiveawayWinners?,
+
+	val invoice: Invoice?,
+
+	val location: Location?,
+
+	val poll: Poll?,
+
+	val venue: Venue?,
+)
+
+/**
+ * Describes the options used for link preview generation.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#linkpreviewoptions)
+ */
+@Serializable
+data class LinkPreviewOptions(
+	@SerialName("is_disabled")
+	val isDisabled: Boolean = false,
+
+	val url: String?,
+
+	@SerialName("prefer_small_media")
+	val preferSmallMedia: Boolean = false,
+
+	@SerialName("prefer_large_media")
+	val preferLargeMedia: Boolean = false,
+
+	@SerialName("show_above_text")
+	val showAboveText: Boolean = false,
+)
+
+/**
+ * Describes reply parameters for the message that is being sent.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#replyparameters)
+ */
+@Serializable
+data class ReplyParameters(
+	/** Identifier of the message that will be replied to in the current chat, or in the chat [chatId] if it is specified. */
+	@SerialName("message_id")
+	val messageId: Message.Id,
+
+	/** If the message to be replied to is from a different chat, unique identifier for the chat or username of the channel (in the format `@channelusername`). */
+	@SerialName("chat_id")
+	val chatId: ChatIdentifier?,
+
+	/** Pass true if the message should be sent even if the specified message to be replied to is not found. */
+	@SerialName("allow_sending_without_reply")
+	val allowSendingWithoutReply: Boolean? = null,
+
+	/** Quoted part of the message to be replied to; 0-1024 characters after entities parsing. */
+	val quote: String? = null,
+
+	/** Mode for parsing entities in the quote. */
+	@SerialName("quote_parse_mode")
+	val quoteParseMode: String? = null,
+
+	/** A list of special entities that appear in the quote. It can be specified instead of [quoteParseMode]. */
+	@SerialName("quote_entities")
+	val quoteEntities: List<MessageEntity>? = null,
+
+	/** Position of the quote in the original message in UTF-16 code units. */
+	@SerialName("quote_position")
+	val quotePosition: Int? = null,
+
+	/** Identifier of the specific checklist task to be replied to. */
+	@SerialName("checklist_task_id")
+	val checklistTaskId: Int? = null,
+) {
+	/**
+	 * Identifier for a chat that can be provided either as a numeric [Chat.Id] or as a username string.
+	 * Encoded as a JSON number for ids and a JSON string for usernames.
+	 */
+	@Serializable(with = ChatIdentifier.Serializer::class)
+	sealed class ChatIdentifier {
+		data class Id(val id: Chat.Id) : ChatIdentifier()
+		data class Username(val username: String) : ChatIdentifier()
+
+		object Serializer : KSerializer<ChatIdentifier> {
+			override val descriptor: SerialDescriptor
+				get() = SerialDescriptor(
+					"opensavvy.telegram.entity.ReplyParameters.ChatIdentifier",
+					JsonPrimitive.serializer().descriptor,
+				)
+
+			override fun serialize(encoder: Encoder, value: ChatIdentifier) {
+				val primitive = when (value) {
+					is Id -> JsonPrimitive(value.id.value)
+					is Username -> JsonPrimitive(value.username)
+				}
+				encoder.encodeSerializableValue(JsonPrimitive.serializer(), primitive)
+			}
+
+			override fun deserialize(decoder: Decoder): ChatIdentifier {
+				val primitive = decoder.decodeSerializableValue(JsonPrimitive.serializer())
+				return if (primitive.isString) {
+					Username(primitive.content)
+				} else {
+					// Telegram uses 64-bit identifiers for chats
+					val id = primitive.content.toLong()
+					Id(Chat.Id(id))
+				}
+			}
+		}
+	}
+}
+
+/**
+ * This object represents a service message about a change in auto-delete timer settings.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#messageautodeletetimerchanged)
+ */
+@Serializable
+data class MessageAutoDeleteTimerChanged(
+	@SerialName("message_auto_delete_time")
+	val duration: @Serializable(with = DurationSecondsSerializer::class) Duration,
+)
+
+/**
+ * This object contains information about the users whose identifiers were shared with the bot using a KeyboardButtonRequestUsers button.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#usersshared)
+ */
+@Serializable
+data class UsersShared(
+	@SerialName("request_id")
+	val requestId: Int,
+
+	val users: List<SharedUser>,
+)
+
+/**
+ * This object contains information about a chat that was shared with the bot using a KeyboardButtonRequestChat button.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#chatshared)
+ */
+@Serializable
+data class ChatShared(
+	@SerialName("request_id")
+	val requestId: Int,
+
+	@SerialName("chat_id")
+	val chatId: Chat.Id,
+
+	val title: String?,
+
+	val username: String?,
+
+	val photo: List<PhotoSize>?,
+)
+
+/**
+ * This object represents a service message about a user allowing a bot to write messages after adding it to the attachment menu,
+ * launching a Web App from a link, or accepting an explicit request from a Web App sent by the method requestWriteAccess.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#writeaccessallowed)
+ */
+@Serializable
+data class WriteAccessAllowed(
+	@SerialName("from_request")
+	val fromRequest: Boolean = false,
+
+	@SerialName("web_app_name")
+	val webAppName: String?,
+
+	@SerialName("from_attachment_menu")
+	val fromAttachmentMenu: Boolean = false,
+)
+
+/**
+ * This object describes a message that was deleted or is otherwise inaccessible to the bot.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#inaccessiblemessage)
+ */
+@Serializable
+data class InaccessibleMessage(
+	val chat: Chat,
+
+	@SerialName("message_id")
+	val id: Message.Id,
+) : MayBeInaccessibleMessage
+
+/**
+ * Describes a service message about tasks added to a checklist.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#checklisttasksadded)
+ */
+@Serializable
+data class ChecklistTasksAdded(
+	/**
+	 * Message containing the checklist to which the tasks were added.
+	 * Note: the embedded [Message] will not contain the `reply_to_message` field even if it is itself a reply.
+	 */
+	@SerialName("checklist_message")
+	val checklistMessage: Message?,
+
+	/** List of tasks added to the checklist. */
+	val tasks: List<ChecklistTask>,
+)
+
+/**
+ * Describes a service message about a change in the price of direct messages sent to a channel chat.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#directmessagepricechanged)
+ */
+@Serializable
+data class DirectMessagePriceChanged(
+	/** True, if direct messages are enabled for the channel chat; false otherwise. */
+	@SerialName("are_direct_messages_enabled")
+	val areDirectMessagesEnabled: Boolean,
+
+	/**
+	 * The new number of Telegram Stars that must be paid by users for each direct message sent to the channel.
+	 * Does not apply to users who have been exempted by administrators. Defaults to 0.
+	 */
+	@SerialName("direct_message_star_count")
+	val directMessageStarCount: Int?,
+)

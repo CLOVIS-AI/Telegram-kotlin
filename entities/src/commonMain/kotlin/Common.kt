@@ -28,6 +28,13 @@ import kotlin.jvm.JvmInline
 value class LanguageCode(val code: String)
 
 /**
+ * Two-letter [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) country code
+ */
+@Serializable
+@JvmInline
+value class CountryCode(val code: String)
+
+/**
  * Accent colors.
  *
  * ### External resources
@@ -58,5 +65,13 @@ data class Location(
 
 	val heading: Int?,
 
-	val proximityAlertStatus: Int?,
+	@SerialName("proximity_alert_radius")
+	val proximityAlertRadius: Int?,
 )
+
+@Serializable
+@JvmInline
+value class Rarity(val permille: Int) {
+
+	val percent: Int get() = permille / 10
+}

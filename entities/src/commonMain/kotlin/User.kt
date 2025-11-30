@@ -95,3 +95,50 @@ data class BirthDate(
 	 */
 	val year: Int?,
 )
+
+/**
+ * This object represents a phone contact.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#contact)
+ */
+@Serializable
+data class Contact(
+	@SerialName("phone_number")
+	val phoneNumber: String,
+
+	@SerialName("first_name")
+	val firstName: String,
+
+	@SerialName("last_name")
+	val lastName: String?,
+
+	@SerialName("user_id")
+	val user: User.Id?,
+
+	val vcard: String?,
+)
+
+/**
+ * This object contains information about a user that was shared with the bot using a KeyboardButtonRequestUsers button.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#shareduser)
+ */
+@Serializable
+data class SharedUser(
+	@SerialName("user_id")
+	val userId: User.Id,
+
+	@SerialName("first_name")
+	val firstName: String?,
+
+	@SerialName("last_name")
+	val lastName: String?,
+
+	val username: String?,
+
+	val photo: List<PhotoSize>?,
+)
