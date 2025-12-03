@@ -120,6 +120,23 @@ data class PhotoSize(
 ) : Media
 
 /**
+ * This object represent a user's profile pictures.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#userprofilephotos)
+ */
+@Serializable
+data class UserProfilePhotos(
+	/** Total number of profile pictures the target user has. */
+	@SerialName("total_count")
+	val totalCount: Int,
+
+	/** Requested profile pictures (in up to 4 sizes each). */
+	val photos: List<List<PhotoSize>>,
+)
+
+/**
  * This object represents an audio file to be treated as music by the Telegram clients.
  *
  * ### External resources
