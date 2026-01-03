@@ -1030,3 +1030,63 @@ data class DirectMessagePriceChanged(
 	@SerialName("direct_message_star_count")
 	val directMessageStarCount: Int?,
 )
+
+/**
+ * This object represents a change of a reaction on a message performed by a user.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#messagereactionupdated)
+ */
+@Serializable
+data class MessageReactionUpdated(
+	/** The chat containing the message the user reacted to */
+	val chat: Chat,
+
+	/** Unique identifier of the message inside the chat */
+	@SerialName("message_id")
+	val messageId: Message.Id,
+
+	/** The user that changed the reaction, if the user isn't anonymous */
+	val user: User?,
+
+	/** The chat on behalf of which the reaction was changed, if the user is anonymous */
+	@SerialName("actor_chat")
+	val actorChat: Chat?,
+
+	/** Date of the change in Unix time */
+	@Serializable(with = UnixSecondsSerializer::class)
+	val date: Instant,
+
+	/** Previous list of reaction types that were set by the user */
+	@SerialName("old_reaction")
+	val oldReaction: List<ReactionType>,
+
+	/** New list of reaction types that have been set by the user */
+	@SerialName("new_reaction")
+	val newReaction: List<ReactionType>,
+)
+
+/**
+ * This object represents reaction changes on a message with anonymous reactions.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#messagereactioncountupdated)
+ */
+@Serializable
+data class MessageReactionCountUpdated(
+	/** The chat containing the message */
+	val chat: Chat,
+
+	/** Unique message identifier inside the chat */
+	@SerialName("message_id")
+	val messageId: Message.Id,
+
+	/** Date of the change in Unix time */
+	@Serializable(with = UnixSecondsSerializer::class)
+	val date: Instant,
+
+	/** List of reactions that are present on the message */
+	val reactions: List<ReactionCount>,
+)
