@@ -103,6 +103,18 @@ data class Gift(
 )
 
 /**
+ * This object represent a list of gifts.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#gifts)
+ */
+@Serializable
+data class Gifts(
+	val gifts: List<Gift>,
+)
+
+/**
  * Describes a service message about a unique gift that was sent or received.
  *
  * ### External resources
@@ -147,6 +159,122 @@ data class UniqueGift(
 
 	@SerialName("publisher_chat")
 	val publisherChat: Chat?,
+)
+
+/**
+ * This object describes a gift received and owned by a user or a chat.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#ownedgift)
+ */
+@Serializable
+sealed class OwnedGift {
+
+	/**
+	 * Describes a regular gift owned by a user or a chat.
+	 *
+	 * ### External resources
+	 *
+	 * - [Official documentation](https://core.telegram.org/bots/api#ownedgiftregular)
+	 */
+	@Serializable
+	@SerialName("regular")
+	data class Regular(
+		val gift: Gift,
+
+		@SerialName("owned_gift_id")
+		val ownedGiftId: String?,
+
+		@SerialName("sender_user")
+		val senderUser: User?,
+
+		@SerialName("send_date")
+		@Serializable(with = UnixSecondsSerializer::class)
+		val sendDate: Instant,
+
+		val text: String?,
+
+		val entities: List<MessageEntity>?,
+
+		@SerialName("is_private")
+		val isPrivate: Boolean = false,
+
+		@SerialName("is_saved")
+		val isSaved: Boolean = false,
+
+		@SerialName("can_be_upgraded")
+		val canBeUpgraded: Boolean = false,
+
+		@SerialName("was_refunded")
+		val wasRefunded: Boolean = false,
+
+		@SerialName("convert_star_count")
+		val convertStarCount: Int?,
+
+		@SerialName("prepaid_upgrade_star_count")
+		val prepaidUpgradeStarCount: Int?,
+
+		@SerialName("is_upgrade_separate")
+		val isUpgradeSeparate: Boolean = false,
+
+		@SerialName("unique_gift_number")
+		val uniqueGiftNumber: Int?,
+	) : OwnedGift()
+
+	/**
+	 * Describes a unique gift received and owned by a user or a chat.
+	 *
+	 * ### External resources
+	 *
+	 * - [Official documentation](https://core.telegram.org/bots/api#ownedgiftunique)
+	 */
+	@Serializable
+	@SerialName("unique")
+	data class Unique(
+		val gift: UniqueGift,
+
+		@SerialName("owned_gift_id")
+		val ownedGiftId: String?,
+
+		@SerialName("sender_user")
+		val senderUser: User?,
+
+		@SerialName("send_date")
+		@Serializable(with = UnixSecondsSerializer::class)
+		val sendDate: Instant,
+
+		@SerialName("is_saved")
+		val isSaved: Boolean = false,
+
+		@SerialName("can_be_transferred")
+		val canBeTransferred: Boolean = false,
+
+		@SerialName("transfer_star_count")
+		val transferStarCount: Int?,
+
+		@SerialName("next_transfer_date")
+		@Serializable(with = UnixSecondsSerializer::class)
+		val nextTransferDate: Instant?,
+	) : OwnedGift()
+}
+
+/**
+ * Contains the list of gifts received and owned by a user or a chat.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#ownedgifts)
+ */
+@Serializable
+data class OwnedGifts(
+	@SerialName("total_count")
+	val totalCount: Int,
+
+	val gifts: List<OwnedGift>,
+
+	@SerialName("next_offset")
+	val nextOffset: String?,
 )
 
 /**
