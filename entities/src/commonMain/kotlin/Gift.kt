@@ -31,16 +31,19 @@ import kotlin.time.Instant
 @Serializable
 data class AcceptedGiftTypes(
 	@SerialName("unlimited_gifts")
-	val unlimitedGifts: Boolean?,
+	val unlimitedGifts: Boolean,
 
 	@SerialName("limited_gifts")
-	val limitedGifts: Boolean?,
+	val limitedGifts: Boolean,
 
 	@SerialName("unique_gifts")
-	val uniqueGifts: Boolean?,
+	val uniqueGifts: Boolean,
 
 	@SerialName("premium_subscription")
-	val premiumSubscription: Boolean?,
+	val premiumSubscription: Boolean,
+
+	@SerialName("gifts_from_channels")
+	val giftsFromChannels: Boolean,
 )
 
 /**
@@ -63,6 +66,9 @@ data class GiftInfo(
 	@SerialName("prepaid_upgrade_star_count")
 	val prepaidUpgradeStarCount: Int?,
 
+	@SerialName("is_upgrade_separate")
+	val isUpgradeSeparate: Boolean = false,
+
 	@SerialName("can_be_upgraded")
 	val canBeUpgraded: Boolean = false,
 
@@ -72,6 +78,9 @@ data class GiftInfo(
 
 	@SerialName("is_private")
 	val isPrivate: Boolean = false,
+
+	@SerialName("unique_gift_number")
+	val uniqueGiftNumber: Int?,
 )
 
 /**
@@ -92,14 +101,50 @@ data class Gift(
 	@SerialName("upgrade_star_count")
 	val upgradeStarCount: Int?,
 
+	@SerialName("is_premium")
+	val isPremium: Boolean = false,
+
+	@SerialName("has_colors")
+	val hasColors: Boolean = false,
+
 	@SerialName("total_count")
 	val totalCount: Int?,
 
 	@SerialName("remaining_count")
 	val remainingCount: Int?,
 
+	@SerialName("personal_total_count")
+	val personalTotalCount: Int?,
+
+	@SerialName("personal_remaining_count")
+	val personalRemainingCount: Int?,
+
+	val background: GiftBackground?,
+
+	@SerialName("unique_gift_variant_count")
+	val uniqueGiftVariantCount: Int?,
+
 	@SerialName("publisher_chat")
 	val publisherChat: Chat?,
+)
+
+/**
+ * This object describes the background of a gift.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#giftbackground)
+ */
+@Serializable
+data class GiftBackground(
+	@SerialName("center_color")
+	val centerColor: Int,
+
+	@SerialName("edge_color")
+	val edgeColor: Int,
+
+	@SerialName("text_color")
+	val textColor: Int,
 )
 
 /**
@@ -126,8 +171,11 @@ data class UniqueGiftInfo(
 	val gift: UniqueGift,
 	val origin: String,
 
-	@SerialName("last_resale_star_count")
-	val lastResaleStarCount: Int?,
+	@SerialName("last_resale_currency")
+	val lastResaleCurrency: String?,
+
+	@SerialName("last_resale_amount")
+	val lastResaleAmount: Long?,
 
 	@SerialName("owned_gift_id")
 	val ownedGiftId: String?,
@@ -148,6 +196,9 @@ data class UniqueGiftInfo(
  */
 @Serializable
 data class UniqueGift(
+	@SerialName("gift_id")
+	val giftId: String,
+
 	@SerialName("base_name")
 	val baseName: String,
 
@@ -156,6 +207,14 @@ data class UniqueGift(
 	val model: UniqueGiftModel,
 	val symbol: UniqueGiftSymbol,
 	val backdrop: UniqueGiftBackdrop,
+
+	@SerialName("is_premium")
+	val isPremium: Boolean = false,
+
+	@SerialName("is_from_blockchain")
+	val isFromBlockchain: Boolean = false,
+
+	val colors: UniqueGiftColors?,
 
 	@SerialName("publisher_chat")
 	val publisherChat: Chat?,
@@ -345,4 +404,32 @@ data class UniqueGiftBackdropColors(
 
 	@SerialName("text_color")
 	val textColor: Int,
+)
+
+/**
+ * This object contains information about the color scheme for a user's name, message replies and link previews based on a unique gift.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#uniquegiftcolors)
+ */
+@Serializable
+data class UniqueGiftColors(
+	@SerialName("model_custom_emoji_id")
+	val modelCustomEmojiId: String,
+
+	@SerialName("symbol_custom_emoji_id")
+	val symbolCustomEmojiId: String,
+
+	@SerialName("light_theme_main_color")
+	val lightThemeMainColor: Int,
+
+	@SerialName("light_theme_other_colors")
+	val lightThemeOtherColors: List<Int>,
+
+	@SerialName("dark_theme_main_color")
+	val darkThemeMainColor: Int,
+
+	@SerialName("dark_theme_other_colors")
+	val darkThemeOtherColors: List<Int>,
 )
