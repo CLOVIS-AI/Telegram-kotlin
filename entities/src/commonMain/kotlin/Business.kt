@@ -43,7 +43,7 @@ data class BusinessIntro(
 @Serializable
 data class BusinessLocation(
 	val address: String,
-	val location: Location,
+	val location: Location?,
 )
 
 /**
@@ -59,22 +59,21 @@ data class BusinessOpeningHours(
 	val timeZoneName: String,
 
 	@SerialName("opening_hours")
-	val openingHours: List<Interval>,
-) {
+	val openingHours: List<BusinessOpeningHoursInterval>,
+)
 
-	/**
-	 * Describes an interval of time during which a business is open.
-	 *
-	 * ### External resources
-	 *
-	 * - [Official documentation](https://core.telegram.org/bots/api#businessopeninghoursinterval)
-	 */
-	@Serializable
-	data class Interval(
-		@SerialName("opening_minute")
-		val openingMinute: Int,
+/**
+ * Describes an interval of time during which a business is open.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#businessopeninghoursinterval)
+ */
+@Serializable
+data class BusinessOpeningHoursInterval(
+	@SerialName("opening_minute")
+	val openingMinute: Int,
 
-		@SerialName("closing_minute")
-		val closingMinute: Int,
-	)
-}
+	@SerialName("closing_minute")
+	val closingMinute: Int,
+)

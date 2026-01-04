@@ -95,6 +95,27 @@ data class SuggestedPostInfo(
 }
 
 /**
+ * Contains parameters of a post that is being suggested by the bot.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#suggestedpostparameters)
+ */
+@Serializable
+data class SuggestedPostParameters(
+	/** Proposed price for the post. If the field is omitted, then the post is unpaid. */
+	val price: SuggestedPostPrice?,
+
+	/**
+	 * Proposed send date of the post. If specified, then the date must be between 300 seconds and
+	 * 2_678_400 seconds (30 days) in the future. If the field is omitted, then the post can be
+	 * published at any time within 30 days at the sole discretion of the user who approves it.
+	 */
+	@SerialName("send_date")
+	val sendDate: @Serializable(with = UnixSecondsSerializer::class) Instant?,
+)
+
+/**
  * Describes a service message about the failed approval of a suggested post.
  * Currently, only caused by insufficient user funds at the time of approval.
  *

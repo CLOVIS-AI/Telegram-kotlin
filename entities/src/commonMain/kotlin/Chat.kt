@@ -20,7 +20,11 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import opensavvy.telegram.entity.Chat.Id
 import opensavvy.telegram.entity.Chat.Type
+import opensavvy.telegram.entity.serialization.DurationSecondsSerializer
+import opensavvy.telegram.entity.serialization.UnixSecondsSerializer
 import kotlin.jvm.JvmInline
+import kotlin.time.Duration
+import kotlin.time.Instant
 
 /**
  * This object represents a chat.
@@ -246,6 +250,9 @@ data class ChatPermissions(
 	@SerialName("can_send_video_notes")
 	val canSendVideoNotes: Boolean?,
 
+	@SerialName("can_send_voice_notes")
+	val canSendVoiceNotes: Boolean?,
+
 	@SerialName("can_send_polls")
 	val canSendPolls: Boolean?,
 
@@ -279,4 +286,102 @@ data class ChatPermissions(
 data class ChatLocation(
 	val location: Location,
 	val address: String,
+)
+
+/**
+ * Represents an invite link for a chat.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#chatinvitelink)
+ */
+@Serializable
+data class ChatInviteLink(
+	@SerialName("invite_link")
+	val inviteLink: String,
+
+	val creator: User,
+
+	@SerialName("creates_join_request")
+	val createsJoinRequest: Boolean = false,
+
+	@SerialName("is_primary")
+	val isPrimary: Boolean = false,
+
+	@SerialName("is_revoked")
+	val isRevoked: Boolean = false,
+
+	val name: String?,
+
+	@SerialName("expire_date")
+	val expireDate: @Serializable(with = UnixSecondsSerializer::class) Instant?,
+
+	@SerialName("member_limit")
+	val memberLimit: Int?,
+
+	@SerialName("pending_join_request_count")
+	val pendingJoinRequestCount: Int?,
+
+	@SerialName("subscription_period")
+	val subscriptionPeriod: @Serializable(with = DurationSecondsSerializer::class) Duration?,
+
+	@SerialName("subscription_price")
+	val subscriptionPrice: Int?,
+)
+
+/**
+ * This object represents changes in the status of a chat member.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#chatmemberupdated)
+ */
+@Serializable
+data class ChatMemberUpdated(
+	val chat: Chat,
+
+	val from: User,
+
+	@Serializable(with = UnixSecondsSerializer::class)
+	val date: Instant,
+
+	@SerialName("old_chat_member")
+	val oldChatMember: ChatMember,
+
+	@SerialName("new_chat_member")
+	val newChatMember: ChatMember,
+
+	@SerialName("invite_link")
+	val inviteLink: ChatInviteLink?,
+
+	@SerialName("via_join_request")
+	val viaJoinRequest: Boolean = false,
+
+	@SerialName("via_chat_folder_invite_link")
+	val viaChatFolderInviteLink: Boolean = false,
+)
+
+/**
+ * Represents a join request sent to a chat.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#chatjoinrequest)
+ */
+@Serializable
+data class ChatJoinRequest(
+	val chat: Chat,
+
+	val from: User,
+
+	@SerialName("user_chat_id")
+	val userChatId: Long,
+
+	@Serializable(with = UnixSecondsSerializer::class)
+	val date: Instant,
+
+	val bio: String?,
+
+	@SerialName("invite_link")
+	val inviteLink: ChatInviteLink?,
 )
