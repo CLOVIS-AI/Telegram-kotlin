@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, OpenSavvy and contributors.
+ * Copyright (c) 2025-2026, OpenSavvy and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,24 @@ data class Update(
 
 	@SerialName("edited_channel_post")
 	val editedChannelPost: Message?,
+
+	@SerialName("business_connection")
+	val businessConnection: BusinessConnection?,
+
+	@SerialName("business_message")
+	val businessMessage: Message?,
+
+	@SerialName("edited_business_message")
+	val editedBusinessMessage: Message?,
+
+	@SerialName("deleted_business_messages")
+	val deletedBusinessMessages: BusinessMessagesDeleted?,
+
+	@SerialName("chat_boost")
+	val chatBoost: ChatBoostUpdated?,
+
+	@SerialName("removed_chat_boost")
+	val removedChatBoost: ChatBoostRemoved?,
 ) {
 
 	@Serializable
