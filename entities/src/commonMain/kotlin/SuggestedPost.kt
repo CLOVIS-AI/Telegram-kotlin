@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, OpenSavvy and contributors.
+ * Copyright (c) 2025-2026, OpenSavvy and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -148,23 +148,6 @@ data class SuggestedPostDeclined(
 
 	/** Comment with which the post was declined. */
 	val comment: String?,
-)
-
-/**
- * Describes an amount of Telegram Stars.
- *
- * ### External resources
- *
- * - [Official documentation](https://core.telegram.org/bots/api#staramount)
- */
-@Serializable
-data class StarAmount(
-	/** Integer amount of Telegram Stars; can be negative. */
-	val amount: Int,
-
-	/** The number of 1/1_000_000_000 shares of Telegram Stars; may be negative if and only if [amount] is non-positive. */
-	@SerialName("nanostar_amount")
-	val nanoStarAmount: Int?,
 )
 
 /**
