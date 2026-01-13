@@ -25,6 +25,8 @@ interface BotRouter {
 
 	interface Builder {
 
+		fun command(text: String, handler: (Message) -> Unit)
+
 		fun message(handler: (Message) -> Unit)
 
 		fun editedMessage(handler: (Message) -> Unit)
@@ -110,6 +112,18 @@ internal class DefaultBotRouter : BotRouter {
 
 		override fun removedChatBoost(handler: (ChatBoostRemoved) -> Unit) {
 			handlers += Handler(Update::removedChatBoost, handler)
+		}
+
+		override fun command(text: String, handler: (Message) -> Unit) {
+			handlers += Handler(
+				predicate = { update ->
+					val entities = update.message?.entities
+						?.filterIsInstance<MessageEntity.BotCommand>()
+
+					update.message != null && entities?.any { update.message?.text(it) == text } == true
+				},
+				handle = { handler(it.message!!) }
+			)
 		}
 
 	}
