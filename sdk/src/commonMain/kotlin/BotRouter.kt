@@ -25,27 +25,27 @@ interface BotRouter {
 
 	interface Builder {
 
-		fun command(text: String, handler: (Message) -> Unit)
+		fun command(text: String, handler: suspend (Message) -> Unit)
 
-		fun message(handler: (Message) -> Unit)
+		fun message(handler: suspend (Message) -> Unit)
 
-		fun editedMessage(handler: (Message) -> Unit)
+		fun editedMessage(handler: suspend (Message) -> Unit)
 
-		fun channelPost(handler: (Message) -> Unit)
+		fun channelPost(handler: suspend (Message) -> Unit)
 
-		fun editedChannelPost(handler: (Message) -> Unit)
+		fun editedChannelPost(handler: suspend (Message) -> Unit)
 
-		fun businessConnection(handler: (BusinessConnection) -> Unit)
+		fun businessConnection(handler: suspend (BusinessConnection) -> Unit)
 
-		fun businessMessage(handler: (Message) -> Unit)
+		fun businessMessage(handler: suspend (Message) -> Unit)
 
-		fun editedBusinessMessage(handler: (Message) -> Unit)
+		fun editedBusinessMessage(handler: suspend (Message) -> Unit)
 
-		fun deletedBusinessMessages(handler: (BusinessMessagesDeleted) -> Unit)
+		fun deletedBusinessMessages(handler: suspend (BusinessMessagesDeleted) -> Unit)
 
-		fun chatBoost(handler: (ChatBoostUpdated) -> Unit)
+		fun chatBoost(handler: suspend (ChatBoostUpdated) -> Unit)
 
-		fun removedChatBoost(handler: (ChatBoostRemoved) -> Unit)
+		fun removedChatBoost(handler: suspend (ChatBoostRemoved) -> Unit)
 
 	}
 }
@@ -74,47 +74,47 @@ internal class DefaultBotRouter : BotRouter {
 			handle = { handle(field.get(it)!!) },
 		)
 
-		override fun message(handler: (Message) -> Unit) {
+		override fun message(handler: suspend (Message) -> Unit) {
 			handlers += Handler(Update::message, handler)
 		}
 
-		override fun editedMessage(handler: (Message) -> Unit) {
+		override fun editedMessage(handler: suspend (Message) -> Unit) {
 			handlers += Handler(Update::editedMessage, handler)
 		}
 
-		override fun channelPost(handler: (Message) -> Unit) {
+		override fun channelPost(handler: suspend (Message) -> Unit) {
 			handlers += Handler(Update::channelPost, handler)
 		}
 
-		override fun editedChannelPost(handler: (Message) -> Unit) {
+		override fun editedChannelPost(handler: suspend (Message) -> Unit) {
 			handlers += Handler(Update::editedChannelPost, handler)
 		}
 
-		override fun businessConnection(handler: (BusinessConnection) -> Unit) {
+		override fun businessConnection(handler: suspend (BusinessConnection) -> Unit) {
 			handlers += Handler(Update::businessConnection, handler)
 		}
 
-		override fun businessMessage(handler: (Message) -> Unit) {
+		override fun businessMessage(handler: suspend (Message) -> Unit) {
 			handlers += Handler(Update::businessMessage, handler)
 		}
 
-		override fun editedBusinessMessage(handler: (Message) -> Unit) {
+		override fun editedBusinessMessage(handler: suspend (Message) -> Unit) {
 			handlers += Handler(Update::editedBusinessMessage, handler)
 		}
 
-		override fun deletedBusinessMessages(handler: (BusinessMessagesDeleted) -> Unit) {
+		override fun deletedBusinessMessages(handler: suspend (BusinessMessagesDeleted) -> Unit) {
 			handlers += Handler(Update::deletedBusinessMessages, handler)
 		}
 
-		override fun chatBoost(handler: (ChatBoostUpdated) -> Unit) {
+		override fun chatBoost(handler: suspend (ChatBoostUpdated) -> Unit) {
 			handlers += Handler(Update::chatBoost, handler)
 		}
 
-		override fun removedChatBoost(handler: (ChatBoostRemoved) -> Unit) {
+		override fun removedChatBoost(handler: suspend (ChatBoostRemoved) -> Unit) {
 			handlers += Handler(Update::removedChatBoost, handler)
 		}
 
-		override fun command(text: String, handler: (Message) -> Unit) {
+		override fun command(text: String, handler: suspend (Message) -> Unit) {
 			handlers += Handler(
 				predicate = { update ->
 					val entities = update.message?.entities
