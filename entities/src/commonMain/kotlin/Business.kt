@@ -19,6 +19,7 @@ package opensavvy.telegram.entity
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import opensavvy.telegram.entity.serialization.UnixSecondsSerializer
+import kotlin.jvm.JvmInline
 import kotlin.time.Instant
 
 /**
@@ -156,7 +157,7 @@ data class BusinessBotRights(
 @Serializable
 data class BusinessConnection(
 	/** Unique identifier of the business connection */
-	val id: String,
+	val id: Id,
 
 	/** Business account user that created the business connection */
 	val user: User,
@@ -179,7 +180,12 @@ data class BusinessConnection(
 	/** True, if the connection is active */
 	@SerialName("is_enabled")
 	val isEnabled: Boolean,
-)
+) {
+
+	@JvmInline
+	@Serializable
+	value class Id(val value: String)
+}
 
 /**
  * This object is received when messages are deleted from a connected business account.

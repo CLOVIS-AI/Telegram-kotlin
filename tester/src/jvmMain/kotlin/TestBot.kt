@@ -32,6 +32,15 @@ fun main() = runBlocking {
 	println(bot.getMe())
 
 	bot.poll {
+		command("/start") {
+			println(" • ${it.from?.username} started the bot!")
+
+			bot.sendMessage(
+				chat = it.chat.id,
+				text = "Hello, ${it.from?.username}!"
+			)
+		}
+
 		message {
 			println(" • ${it.from?.username} sent message: ${it.text}")
 		}

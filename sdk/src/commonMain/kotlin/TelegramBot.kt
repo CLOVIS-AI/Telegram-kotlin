@@ -26,10 +26,7 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
-import opensavvy.telegram.entity.Response
-import opensavvy.telegram.entity.SetMyCommandsParams
-import opensavvy.telegram.entity.Update
-import opensavvy.telegram.entity.User
+import opensavvy.telegram.entity.*
 import opensavvy.telegram.entity.serialization.TelegramJson
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -85,6 +82,47 @@ class TelegramBot internal constructor(
 			setBody(commands)
 		}.trueOrThrow()
 
+	suspend fun sendMessage(
+		message: NewMessage,
+	): Message =
+		client.post("sendMessage") {
+			setBody(message)
+		}.bodyOrThrow()
+
+	suspend fun sendMessage(
+		chat: Chat.Id,
+		text: String,
+		topic: String? = null,
+		parseMode: String? = null,
+		entities: List<MessageEntity> = emptyList(),
+		linkPreviewOptions: LinkPreviewOptions? = null,
+		disableNotifications: Boolean = false,
+		protectContent: Boolean? = null,
+		allowPaidBroadcast: Boolean? = null,
+		messageEffectId: String? = null,
+		suggestedPostParameters: SuggestedPostParameters? = null,
+		replyParameters: ReplyParameters? = null,
+		thread: Message.Id? = null,
+		businessConnectionId: BusinessConnection.Id? = null,
+	): Message = sendMessage(
+		NewMessage(
+			chat = chat,
+			text = text,
+			topic = topic,
+			parseMode = parseMode,
+			entities = entities,
+			linkPreviewOptions = linkPreviewOptions,
+			disableNotifications = disableNotifications,
+			protectContent = protectContent,
+			allowPaidBroadcast = allowPaidBroadcast,
+			messageEffectId = messageEffectId,
+			suggestedPostParameters = suggestedPostParameters,
+			replyParameters = replyParameters,
+			thread = thread,
+			businessConnectionId = businessConnectionId,
+		)
+	)
+
 	suspend fun poll(block: BotRouter.Builder.() -> Unit) {
 		val router = DefaultBotRouter()
 		router.builder().apply(block)
@@ -113,10 +151,10 @@ class TelegramBot internal constructor(
 					contentType(ContentType.Application.Json)
 				}
 
-				install(Logging) {
-					logger = Logger.SIMPLE
-					level = LogLevel.ALL // TODO in the future: spam less
-				}
+				// install(Logging) {
+				// 	logger = Logger.SIMPLE
+				// 	level = LogLevel.INFO
+				// }
 
 				install(ContentNegotiation) {
 					json(TelegramJson)

@@ -403,6 +403,52 @@ data class Message(
 }
 
 /**
+ * The data structure used as parameter of the method `/sendMessage`.
+ */
+@Serializable
+data class NewMessage(
+	@SerialName("chat_id")
+	val chat: Chat.Id,
+
+	val text: String,
+
+	@SerialName("direct_messages_topic_id")
+	val topic: String? = null,
+
+	@SerialName("parse_mode")
+	val parseMode: String? = null,
+
+	val entities: List<MessageEntity> = emptyList(),
+
+	@SerialName("link_preview_options")
+	val linkPreviewOptions: LinkPreviewOptions? = null,
+
+	@SerialName("disable_notification")
+	val disableNotifications: Boolean = false,
+
+	@SerialName("protect_content")
+	val protectContent: Boolean? = null,
+
+	@SerialName("allow_paid_broadcast")
+	val allowPaidBroadcast: Boolean? = null,
+
+	@SerialName("message_effect_id")
+	val messageEffectId: String? = null,
+
+	@SerialName("suggested_post_parameters")
+	val suggestedPostParameters: SuggestedPostParameters? = null,
+
+	@SerialName("reply_parameters")
+	val replyParameters: ReplyParameters? = null,
+
+	@SerialName("message_thread_id")
+	val thread: Message.Id? = null,
+
+	@SerialName("business_connection_id")
+	val businessConnectionId: BusinessConnection.Id? = null,
+)
+
+/**
  * This object represents one special entity in a text message. For example, hashtags, usernames, URLs, etc.
  *
  * ### External resources
