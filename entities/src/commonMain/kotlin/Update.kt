@@ -64,5 +64,8 @@ data class Update(
 
 	@Serializable
 	@JvmInline
-	value class Id(val value: Long)
+	value class Id(val value: Long) {
+
+		operator fun plus(other: Long) = Id(value + other)
+	}
 }

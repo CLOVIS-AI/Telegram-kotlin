@@ -31,7 +31,9 @@ fun main() = runBlocking {
 
 	println(bot.getMe())
 
-	for (update in bot.getUpdates()) {
-		println(" • $update")
+	bot.poll {
+		message {
+			println(" • ${it.from?.username} sent message: ${it.text}")
+		}
 	}
 }
