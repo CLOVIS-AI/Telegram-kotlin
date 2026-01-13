@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, OpenSavvy and contributors.
+ * Copyright (c) 2025-2026, OpenSavvy and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,14 @@ import kotlinx.coroutines.runBlocking
 import opensavvy.telegram.sdk.TelegramBot
 
 fun main() = runBlocking {
-	val bot = TelegramBot.create("TOKEN HERE")
+	val bot = TelegramBot.create(
+		javaClass.getResourceAsStream("/opensavvy/telegram/tester/bot.properties")
+			?.use { stream ->
+				java.util.Properties().apply { load(stream) }.getProperty("token")
+			}
+			?.takeIf { it.isNotBlank() }
+			?: error("Could not load token from bot.properties. Did you fill in your token?")
+	)
 
 	println(bot.getMe())
 
