@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, OpenSavvy and contributors.
+ * Copyright (c) 2025-2026, OpenSavvy and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,7 +112,7 @@ sealed class BotCommandScope {
 	data class SpecificChatAdministrators(
 		@SerialName("chat_id")
 		val chatId: Chat.Id,
-	)
+	) : BotCommandScope()
 
 	/**
 	 * Represents the scope of bot commands, covering a specific member of a group or supergroup chat.
@@ -128,8 +128,45 @@ sealed class BotCommandScope {
 		val chatId: Chat.Id,
 		@SerialName("user_id")
 		val userId: User.Id,
-	)
+	) : BotCommandScope()
 }
+
+/**
+ * This object represents the bot's name.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#botname)
+ */
+@Serializable
+data class BotName(
+	val name: String,
+)
+
+/**
+ * This object represents the bot's description.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#botdescription)
+ */
+@Serializable
+data class BotDescription(
+	val description: String,
+)
+
+/**
+ * This object represents the bot's short description.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#botshortdescription)
+ */
+@Serializable
+data class BotShortDescription(
+	@SerialName("short_description")
+	val shortDescription: String,
+)
 
 /**
  * Parameters of the `/setMyCommands` endpoint.

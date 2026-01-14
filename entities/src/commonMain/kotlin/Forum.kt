@@ -20,6 +20,30 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
+ * This object represents a forum topic.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#forumtopic)
+ */
+@Serializable
+data class ForumTopic(
+	@SerialName("message_thread_id")
+	val messageThreadId: Int,
+
+	val name: String,
+
+	@SerialName("icon_color")
+	val iconColor: Int,
+
+	@SerialName("icon_custom_emoji_id")
+	val iconCustomEmojiId: String?,
+
+	@SerialName("is_name_implicit")
+	val isNameImplicit: Boolean = false,
+)
+
+/**
  * This object represents a service message about a new forum topic created in the chat.
  *
  * ### External resources

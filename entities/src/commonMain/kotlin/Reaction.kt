@@ -43,11 +43,11 @@ sealed class ReactionType {
 	) : ReactionType()
 
 	/**
-	 * The reaction is based on an emoji.
+	 * The reaction is based on a custom emoji.
 	 *
 	 * ### External resources
 	 *
-	 * - [Official documentation](https://core.telegram.org/bots/api#reactiontypeemoji)
+	 * - [Official documentation](https://core.telegram.org/bots/api#reactiontypecustomemoji)
 	 */
 	@Serializable
 	@SerialName("custom_emoji")
@@ -67,3 +67,18 @@ sealed class ReactionType {
 	@SerialName("paid")
 	data object Paid : ReactionType()
 }
+
+/**
+ * Represents a reaction added to a message along with the number of times it was added.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#reactioncount)
+ */
+@Serializable
+data class ReactionCount(
+	val type: ReactionType,
+
+	@SerialName("total_count")
+	val totalCount: Int,
+)

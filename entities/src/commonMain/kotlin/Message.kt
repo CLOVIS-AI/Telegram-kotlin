@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, OpenSavvy and contributors.
+ * Copyright (c) 2025-2026, OpenSavvy and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -403,6 +403,52 @@ data class Message(
 }
 
 /**
+ * The data structure used as parameter of the method `/sendMessage`.
+ */
+@Serializable
+data class NewMessage(
+	@SerialName("chat_id")
+	val chat: Chat.Id,
+
+	val text: String,
+
+	@SerialName("direct_messages_topic_id")
+	val topic: String? = null,
+
+	@SerialName("parse_mode")
+	val parseMode: String? = null,
+
+	val entities: List<MessageEntity> = emptyList(),
+
+	@SerialName("link_preview_options")
+	val linkPreviewOptions: LinkPreviewOptions? = null,
+
+	@SerialName("disable_notification")
+	val disableNotifications: Boolean = false,
+
+	@SerialName("protect_content")
+	val protectContent: Boolean? = null,
+
+	@SerialName("allow_paid_broadcast")
+	val allowPaidBroadcast: Boolean? = null,
+
+	@SerialName("message_effect_id")
+	val messageEffectId: String? = null,
+
+	@SerialName("suggested_post_parameters")
+	val suggestedPostParameters: SuggestedPostParameters? = null,
+
+	@SerialName("reply_parameters")
+	val replyParameters: ReplyParameters? = null,
+
+	@SerialName("message_thread_id")
+	val thread: Message.Id? = null,
+
+	@SerialName("business_connection_id")
+	val businessConnectionId: BusinessConnection.Id? = null,
+)
+
+/**
  * This object represents one special entity in a text message. For example, hashtags, usernames, URLs, etc.
  *
  * ### External resources
@@ -417,7 +463,7 @@ sealed class MessageEntity {
 	abstract val length: Int
 
 	val range: IntRange
-		get() = offset..(offset + length)
+		get() = offset..<(offset + length)
 
 	/**
 	 * Example: `@user`.
@@ -1029,4 +1075,64 @@ data class DirectMessagePriceChanged(
 	 */
 	@SerialName("direct_message_star_count")
 	val directMessageStarCount: Int?,
+)
+
+/**
+ * This object represents a change of a reaction on a message performed by a user.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#messagereactionupdated)
+ */
+@Serializable
+data class MessageReactionUpdated(
+	/** The chat containing the message the user reacted to */
+	val chat: Chat,
+
+	/** Unique identifier of the message inside the chat */
+	@SerialName("message_id")
+	val messageId: Message.Id,
+
+	/** The user that changed the reaction, if the user isn't anonymous */
+	val user: User?,
+
+	/** The chat on behalf of which the reaction was changed, if the user is anonymous */
+	@SerialName("actor_chat")
+	val actorChat: Chat?,
+
+	/** Date of the change in Unix time */
+	@Serializable(with = UnixSecondsSerializer::class)
+	val date: Instant,
+
+	/** Previous list of reaction types that were set by the user */
+	@SerialName("old_reaction")
+	val oldReaction: List<ReactionType>,
+
+	/** New list of reaction types that have been set by the user */
+	@SerialName("new_reaction")
+	val newReaction: List<ReactionType>,
+)
+
+/**
+ * This object represents reaction changes on a message with anonymous reactions.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#messagereactioncountupdated)
+ */
+@Serializable
+data class MessageReactionCountUpdated(
+	/** The chat containing the message */
+	val chat: Chat,
+
+	/** Unique message identifier inside the chat */
+	@SerialName("message_id")
+	val messageId: Message.Id,
+
+	/** Date of the change in Unix time */
+	@Serializable(with = UnixSecondsSerializer::class)
+	val date: Instant,
+
+	/** List of reactions that are present on the message */
+	val reactions: List<ReactionCount>,
 )
