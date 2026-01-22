@@ -127,6 +127,8 @@ class TelegramBot internal constructor(
 		val router = DefaultBotRouter()
 		router.builder().apply(block)
 
+		router.registerCommands(this)
+
 		var lastUpdateId: Update.Id? = null
 		while (currentCoroutineContext().isActive) {
 			val updates = try {

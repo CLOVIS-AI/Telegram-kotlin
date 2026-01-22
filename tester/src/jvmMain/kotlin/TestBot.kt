@@ -32,7 +32,7 @@ fun main() = runBlocking {
 	println(bot.getMe())
 
 	bot.poll {
-		command("/start") {
+		command("/start", description = "Start discussing with this bot!") {
 			println(" • ${it.from?.username} started the bot!")
 
 			bot.sendMessage(

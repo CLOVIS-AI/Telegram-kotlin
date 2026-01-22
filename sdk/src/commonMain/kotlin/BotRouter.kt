@@ -25,7 +25,7 @@ interface BotRouter {
 
 	interface Builder {
 
-		fun command(text: String, handler: suspend (Message) -> Unit)
+		fun command(text: String, description: String? = null, handler: suspend (Message) -> Unit)
 
 		fun message(handler: suspend (Message) -> Unit)
 
@@ -62,6 +62,7 @@ internal class DefaultBotRouter : BotRouter {
 
 	private class Handler(
 		val predicate: (Update) -> Boolean,
+		val command: BotCommand?,
 		val handle: suspend (Update) -> Unit,
 	)
 
@@ -71,6 +72,7 @@ internal class DefaultBotRouter : BotRouter {
 			handle: suspend (HandlerType) -> Unit,
 		): Handler = Handler(
 			predicate = { field.get(it) != null },
+			command = null,
 			handle = { handle(field.get(it)!!) },
 		)
 
@@ -114,7 +116,7 @@ internal class DefaultBotRouter : BotRouter {
 			handlers += Handler(Update::removedChatBoost, handler)
 		}
 
-		override fun command(text: String, handler: suspend (Message) -> Unit) {
+		override fun command(text: String, description: String?, handler: suspend (Message) -> Unit) {
 			handlers += Handler(
 				predicate = { update ->
 					val entities = update.message?.entities
@@ -122,11 +124,27 @@ internal class DefaultBotRouter : BotRouter {
 
 					update.message != null && entities?.any { update.message?.text(it) == text } == true
 				},
+				command = BotCommand(
+					command = text,
+					description = description ?: "Command $text",
+				),
 				handle = { handler(it.message!!) }
 			)
 		}
-
 	}
 
 	internal fun builder(): BotRouter.Builder = Builder()
+
+	/**
+	 * Calls [TelegramBot.setMyCommands] for each command that has been [registered][BotRouter.Builder.command].
+	 */
+	internal suspend fun registerCommands(bot: TelegramBot) {
+		val commands = handlers.mapNotNull { it.command }
+
+		bot.setMyCommands(
+			SetMyCommandsParams(
+				commands = commands,
+			)
+		)
+	}
 }
