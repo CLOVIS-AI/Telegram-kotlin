@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, OpenSavvy and contributors.
+ * Copyright (c) 2025-2026, OpenSavvy and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ data class ReplyKeyboardMarkup(
 
 	/** Use this parameter if you want to show the keyboard to specific users only. */
 	val selective: Boolean = false,
-)
+) : NewMessageKeyboardMarkup
 
 /**
  * Upon receiving a message with this object, Telegram clients will remove the current custom keyboard
@@ -73,7 +73,7 @@ data class ReplyKeyboardRemove(
 
 	/** Use this parameter if you want to remove the keyboard for specific users only. */
 	val selective: Boolean = false,
-)
+) : NewMessageKeyboardMarkup
 
 /**
  * Upon receiving a message with this object, Telegram clients will display a reply interface to the user
@@ -97,7 +97,7 @@ data class ForceReply(
 
 	/** Use this parameter if you want to force reply from specific users only. */
 	val selective: Boolean? = null,
-)
+) : NewMessageKeyboardMarkup
 
 /**
  * This object represents one button of the reply keyboard.

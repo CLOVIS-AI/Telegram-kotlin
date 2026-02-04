@@ -17,6 +17,8 @@
 package opensavvy.telegram.tester
 
 import kotlinx.coroutines.runBlocking
+import opensavvy.telegram.entity.InlineKeyboardButton
+import opensavvy.telegram.entity.InlineKeyboardMarkup
 import opensavvy.telegram.sdk.TelegramBot
 
 fun main() = runBlocking {
@@ -38,6 +40,20 @@ fun main() = runBlocking {
 			bot.sendMessage(
 				chat = it.chat.id,
 				text = "Hello, ${it.from?.username}!"
+			)
+		}
+
+		command("/buttons", description = "Display multiple buttons") {
+			bot.sendMessage(
+				chat = it.chat.id,
+				text = "Here are a few buttons!",
+				replyMarkup = InlineKeyboardMarkup(
+					listOf(
+						listOf(InlineKeyboardButton("1\uFE0F⃣", callbackData = "1"), InlineKeyboardButton("2\uFE0F⃣", callbackData = "2"), InlineKeyboardButton("3\uFE0F⃣", callbackData = "3")),
+						listOf(InlineKeyboardButton("4\uFE0F⃣", callbackData = "4"), InlineKeyboardButton("5\uFE0F⃣", callbackData = "5"), InlineKeyboardButton("6\uFE0F⃣", callbackData = "6")),
+						listOf(InlineKeyboardButton("7\uFE0F⃣", callbackData = "7"), InlineKeyboardButton("8\uFE0F⃣", callbackData = "8"), InlineKeyboardButton("9\uFE0F⃣", callbackData = "9")),
+					)
+				)
 			)
 		}
 

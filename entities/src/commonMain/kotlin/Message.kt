@@ -445,12 +445,56 @@ data class NewMessage(
 	@SerialName("reply_parameters")
 	val replyParameters: ReplyParameters? = null,
 
+	@SerialName("reply_markup")
+	val replyMarkup: NewMessageKeyboardMarkup? = null,
+
 	@SerialName("message_thread_id")
 	val thread: Message.Id? = null,
 
 	@SerialName("business_connection_id")
 	val businessConnectionId: BusinessConnection.Id? = null,
 )
+
+/**
+ * The different kinds of markups (buttons, etc) that can be specified when creating a [NewMessage].
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#sendmessage)
+ */
+@Serializable(with = NewMessageKeyboardMarkup.Serializer::class)
+sealed interface NewMessageKeyboardMarkup {
+
+	object Serializer : KSerializer<NewMessageKeyboardMarkup> {
+		override val descriptor: SerialDescriptor
+			get() = SerialDescriptor("opensavvy.telegram.entity.NewMessageKeyboardMarkup", JsonObject.serializer().descriptor)
+
+		override fun serialize(encoder: Encoder, value: NewMessageKeyboardMarkup) {
+			// Yes, this code is the same for each type.
+			// The difference is the inferred serializer. By writing the code this way, each call infers to the child serializer.
+			val json = when (value) {
+				is ForceReply -> TelegramJson.encodeToJsonElement(value)
+				is InlineKeyboardMarkup -> TelegramJson.encodeToJsonElement(value)
+				is ReplyKeyboardMarkup -> TelegramJson.encodeToJsonElement(value)
+				is ReplyKeyboardRemove -> TelegramJson.encodeToJsonElement(value)
+			} as JsonObject
+
+			encoder.encodeSerializableValue(JsonObject.serializer(), json)
+		}
+
+		override fun deserialize(decoder: Decoder): NewMessageKeyboardMarkup {
+			val json = decoder.decodeSerializableValue(JsonObject.serializer())
+
+			return when {
+				json["inline_keyboard"] != null -> TelegramJson.decodeFromJsonElement<InlineKeyboardMarkup>(json)
+				json["keyboard"] != null -> TelegramJson.decodeFromJsonElement<ReplyKeyboardMarkup>(json)
+				json["remove_keyboard"] != null -> TelegramJson.decodeFromJsonElement<ReplyKeyboardRemove>(json)
+				json["force_reply"] != null -> TelegramJson.decodeFromJsonElement<ForceReply>(json)
+				else -> error("Received an unknown keyboard markup: $json")
+			}
+		}
+	}
+}
 
 /**
  * This object represents one special entity in a text message. For example, hashtags, usernames, URLs, etc.

@@ -102,6 +102,7 @@ class TelegramBot internal constructor(
 		messageEffectId: String? = null,
 		suggestedPostParameters: SuggestedPostParameters? = null,
 		replyParameters: ReplyParameters? = null,
+		replyMarkup: NewMessageKeyboardMarkup? = null,
 		thread: Message.Id? = null,
 		businessConnectionId: BusinessConnection.Id? = null,
 	): Message = sendMessage(
@@ -118,6 +119,7 @@ class TelegramBot internal constructor(
 			messageEffectId = messageEffectId,
 			suggestedPostParameters = suggestedPostParameters,
 			replyParameters = replyParameters,
+			replyMarkup = replyMarkup,
 			thread = thread,
 			businessConnectionId = businessConnectionId,
 		)
