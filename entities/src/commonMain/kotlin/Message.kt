@@ -404,6 +404,10 @@ data class Message(
 
 /**
  * The data structure used as parameter of the method `/sendMessage`.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#sendmessage)
  */
 @Serializable
 data class NewMessage(
