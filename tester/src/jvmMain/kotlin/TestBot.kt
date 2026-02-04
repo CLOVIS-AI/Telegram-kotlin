@@ -57,6 +57,10 @@ fun main() = runBlocking {
 			)
 		}
 
+		callbackQuery {
+			println(" • ${it.user.username} pressed the button ${it.data}")
+		}
+
 		message {
 			println(" • ${it.from?.username} sent message: ${it.text}")
 		}

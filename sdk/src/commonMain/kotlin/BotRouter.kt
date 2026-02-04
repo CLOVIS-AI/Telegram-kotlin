@@ -47,6 +47,8 @@ interface BotRouter {
 
 		fun removedChatBoost(handler: suspend (ChatBoostRemoved) -> Unit)
 
+		fun callbackQuery(handler: suspend (CallbackQuery) -> Unit)
+
 	}
 }
 
@@ -114,6 +116,10 @@ internal class DefaultBotRouter : BotRouter {
 
 		override fun removedChatBoost(handler: suspend (ChatBoostRemoved) -> Unit) {
 			handlers += Handler(Update::removedChatBoost, handler)
+		}
+
+		override fun callbackQuery(handler: suspend (CallbackQuery) -> Unit) {
+			handlers += Handler(Update::callbackQuery, handler)
 		}
 
 		override fun command(text: String, description: String?, handler: suspend (Message) -> Unit) {
