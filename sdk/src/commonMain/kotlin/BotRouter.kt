@@ -16,6 +16,8 @@
 
 package opensavvy.telegram.sdk
 
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import opensavvy.telegram.entity.*
 import kotlin.reflect.KProperty1
 
@@ -57,7 +59,12 @@ internal class DefaultBotRouter : BotRouter {
 		val handler = handlers.firstOrNull { it.predicate(update) }
 			?: run { println("Ignored un-handled update $update"); return }
 
-		handler.handle(update)
+		try {
+			handler.handle(update)
+		} catch (e: Exception) {
+			currentCoroutineContext().ensureActive()
+			println("Error while handling update ${update.id}\n$update\n${e.stackTraceToString()}")
+		}
 	}
 
 	private class Handler(
