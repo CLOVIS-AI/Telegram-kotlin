@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, OpenSavvy and contributors.
+ * Copyright (c) 2025-2026, OpenSavvy and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ data class InlineKeyboardMarkup(
 	/** Array of button rows, each represented by an array of [InlineKeyboardButton] objects. */
 	@SerialName("inline_keyboard")
 	val inlineKeyboard: List<List<InlineKeyboardButton>>,
-)
+) : NewMessageKeyboardMarkup
 
 /**
  * This object represents one button of an inline keyboard. Exactly one of the optional fields must be used

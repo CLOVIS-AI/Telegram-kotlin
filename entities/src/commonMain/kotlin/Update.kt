@@ -60,6 +60,9 @@ data class Update(
 
 	@SerialName("removed_chat_boost")
 	val removedChatBoost: ChatBoostRemoved?,
+
+	@SerialName("callback_query")
+	val callbackQuery: CallbackQuery?,
 ) {
 
 	@Serializable
