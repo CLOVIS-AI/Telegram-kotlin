@@ -936,7 +936,7 @@ data class ReplyParameters(
 
 	/** If the message to be replied to is from a different chat, unique identifier for the chat or username of the channel (in the format `@channelusername`). */
 	@SerialName("chat_id")
-	val chatId: ChatIdentifier?,
+	val chatId: ChatIdentifier? = null,
 
 	/** Pass true if the message should be sent even if the specified message to be replied to is not found. */
 	@SerialName("allow_sending_without_reply")

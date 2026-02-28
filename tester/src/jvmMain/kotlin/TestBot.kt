@@ -19,6 +19,7 @@ package opensavvy.telegram.tester
 import kotlinx.coroutines.runBlocking
 import opensavvy.telegram.entity.InlineKeyboardButton
 import opensavvy.telegram.entity.InlineKeyboardMarkup
+import opensavvy.telegram.entity.ReplyParameters
 import opensavvy.telegram.sdk.TelegramBot
 
 fun main() = runBlocking {
@@ -39,7 +40,8 @@ fun main() = runBlocking {
 
 			bot.sendMessage(
 				chat = it.chat.id,
-				text = "Hello, ${it.from?.username}!"
+				text = "Hello, ${it.from?.username}!",
+				reply = ReplyParameters(it.id),
 			)
 		}
 
