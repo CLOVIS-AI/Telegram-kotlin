@@ -50,9 +50,8 @@ class TelegramBot internal constructor(
 		}
 	}
 
-	private suspend fun HttpResponse.trueOrThrow() {
+	private suspend fun HttpResponse.trueOrThrow(): Boolean =
 		bodyOrThrow<Boolean> { it.result == true }
-	}
 
 	suspend fun getMe(): User =
 		client.get("getMe").bodyOrThrow()
