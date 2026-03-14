@@ -17,8 +17,10 @@
 package opensavvy.telegram.tester
 
 import kotlinx.coroutines.runBlocking
+import opensavvy.telegram.entity.Chat
 import opensavvy.telegram.entity.InlineKeyboardButton
 import opensavvy.telegram.entity.InlineKeyboardMarkup
+import opensavvy.telegram.entity.Message
 import opensavvy.telegram.entity.ReplyParameters
 import opensavvy.telegram.sdk.TelegramBot
 
@@ -61,6 +63,12 @@ fun main() = runBlocking {
 
 		callbackQuery {
 			println(" • ${it.user.username} pressed the button ${it.data}")
+			bot.editMessageText(
+				chat = Chat.Id(it.user.id.value),
+				messageId = (it.message as Message).id,
+				text = "Well done, you clicked the button!",
+			)
+
 		}
 
 		message {

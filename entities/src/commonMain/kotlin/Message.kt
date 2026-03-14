@@ -456,6 +456,40 @@ data class NewMessage(
 )
 
 /**
+ * The data structure used as parameter of the method `/editMessageText`.
+ *
+ * ### External resources
+ *
+ * - [Official documentation](https://core.telegram.org/bots/api#editmessagetext)
+ */
+@Serializable
+data class EditMessageText(
+	@SerialName("chat_id")
+	val chat: Chat.Id? = null,
+
+	@SerialName("message_id")
+	val messageId: Message.Id? = null,
+
+	@SerialName("inline_message_id")
+	val inlineMessageId: String? = null,
+
+	val text: String,
+
+	@SerialName("parse_mode")
+	val parseMode: String? = null,
+
+	val entities: List<MessageEntity>? = emptyList(),
+
+	@SerialName("link_preview_options")
+	val linkPreviewOptions: LinkPreviewOptions? = null,
+
+	@SerialName("reply_markup")
+	val replyMarkup: InlineKeyboardMarkup? = null,
+
+	@SerialName("business_connection_id")
+	val businessConnectionId: BusinessConnection.Id? = null,
+)
+/**
  * The different kinds of markups (buttons, etc) that can be specified when creating a [NewMessage].
  *
  * ### External resources

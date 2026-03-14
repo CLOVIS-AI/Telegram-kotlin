@@ -125,6 +125,37 @@ class TelegramBot internal constructor(
 		)
 	)
 
+	suspend fun editMessageText(
+		message: EditMessageText,
+	): Message =
+		client.post("editMessageText") {
+			setBody(message)
+		}.bodyOrThrow()
+
+	suspend fun editMessageText(
+		chat: Chat.Id,
+		messageId: Message.Id,
+		text: String,
+		inlineMessageId: String? = null,
+		parseMode: String? = null,
+		entities: List<MessageEntity>? = null,
+		linkPreviewOptions: LinkPreviewOptions? = null,
+		replyMarkup: InlineKeyboardMarkup? = null,
+		businessConnectionId: BusinessConnection.Id? = null,
+	): Message = editMessageText(
+		EditMessageText(
+			chat = chat,
+			messageId = messageId,
+			inlineMessageId = inlineMessageId,
+			text = text,
+			parseMode = parseMode,
+			entities = entities,
+			linkPreviewOptions = linkPreviewOptions,
+			replyMarkup = replyMarkup,
+			businessConnectionId = businessConnectionId
+		)
+	)
+
 	suspend fun poll(block: BotRouter.Builder.() -> Unit) {
 		val router = DefaultBotRouter()
 		router.builder().apply(block)
