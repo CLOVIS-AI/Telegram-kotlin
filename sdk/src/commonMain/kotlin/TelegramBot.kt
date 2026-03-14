@@ -82,6 +82,7 @@ class TelegramBot internal constructor(
 			setBody(commands)
 		}.trueOrThrow()
 
+	@IgnorableReturnValue
 	suspend fun sendMessage(
 		message: NewMessage,
 	): Message =
@@ -89,6 +90,7 @@ class TelegramBot internal constructor(
 			setBody(message)
 		}.bodyOrThrow()
 
+	@IgnorableReturnValue
 	suspend fun sendMessage(
 		chat: Chat.Id,
 		text: String,
@@ -125,6 +127,7 @@ class TelegramBot internal constructor(
 		)
 	)
 
+	@IgnorableReturnValue
 	suspend fun editMessageText(
 		message: EditMessageText,
 	): Message =
@@ -132,6 +135,7 @@ class TelegramBot internal constructor(
 			setBody(message)
 		}.bodyOrThrow()
 
+	@IgnorableReturnValue
 	suspend fun editMessageText(
 		chat: Chat.Id,
 		messageId: Message.Id,
