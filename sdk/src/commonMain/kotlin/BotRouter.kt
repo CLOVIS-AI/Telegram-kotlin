@@ -23,33 +23,33 @@ import kotlin.reflect.KProperty1
 
 interface BotRouter {
 
-	suspend fun route(update: Update)
+	suspend fun route(update: Update, context: BotContext)
 
 	interface Builder {
 
-		fun command(text: String, description: String? = null, handler: suspend (Message) -> Unit)
+		fun command(text: String, description: String? = null, handler: suspend BotContext.(Message) -> Unit)
 
-		fun message(handler: suspend (Message) -> Unit)
+		fun message(handler: suspend BotContext.(Message) -> Unit)
 
-		fun editedMessage(handler: suspend (Message) -> Unit)
+		fun editedMessage(handler: suspend BotContext.(Message) -> Unit)
 
-		fun channelPost(handler: suspend (Message) -> Unit)
+		fun channelPost(handler: suspend BotContext.(Message) -> Unit)
 
-		fun editedChannelPost(handler: suspend (Message) -> Unit)
+		fun editedChannelPost(handler: suspend BotContext.(Message) -> Unit)
 
-		fun businessConnection(handler: suspend (BusinessConnection) -> Unit)
+		fun businessConnection(handler: suspend BotContext.(BusinessConnection) -> Unit)
 
-		fun businessMessage(handler: suspend (Message) -> Unit)
+		fun businessMessage(handler: suspend BotContext.(Message) -> Unit)
 
-		fun editedBusinessMessage(handler: suspend (Message) -> Unit)
+		fun editedBusinessMessage(handler: suspend BotContext.(Message) -> Unit)
 
-		fun deletedBusinessMessages(handler: suspend (BusinessMessagesDeleted) -> Unit)
+		fun deletedBusinessMessages(handler: suspend BotContext.(BusinessMessagesDeleted) -> Unit)
 
-		fun chatBoost(handler: suspend (ChatBoostUpdated) -> Unit)
+		fun chatBoost(handler: suspend BotContext.(ChatBoostUpdated) -> Unit)
 
-		fun removedChatBoost(handler: suspend (ChatBoostRemoved) -> Unit)
+		fun removedChatBoost(handler: suspend BotContext.(ChatBoostRemoved) -> Unit)
 
-		fun callbackQuery(handler: suspend (CallbackQuery) -> Unit)
+		fun callbackQuery(handler: suspend BotContext.(CallbackQuery) -> Unit)
 
 	}
 }
@@ -57,12 +57,14 @@ interface BotRouter {
 internal class DefaultBotRouter : BotRouter {
 	private val handlers = ArrayList<Handler>()
 
-	override suspend fun route(update: Update) {
+	override suspend fun route(update: Update, context: BotContext) {
 		val handler = handlers.firstOrNull { it.predicate(update) }
 			?: run { println("Ignored un-handled update $update"); return }
 
 		try {
-			handler.handle(update)
+			with(handler) {
+				context.handle(update)
+			}
 		} catch (e: Exception) {
 			currentCoroutineContext().ensureActive()
 			println("Error while handling update ${update.id}\n$update\n${e.stackTraceToString()}")
@@ -72,64 +74,64 @@ internal class DefaultBotRouter : BotRouter {
 	private class Handler(
 		val predicate: (Update) -> Boolean,
 		val command: BotCommand?,
-		val handle: suspend (Update) -> Unit,
+		val handle: suspend BotContext.(Update) -> Unit,
 	)
 
 	private inner class Builder : BotRouter.Builder {
 		private fun <HandlerType> Handler(
 			field: KProperty1<Update, HandlerType?>,
-			handle: suspend (HandlerType) -> Unit,
+			handle: suspend BotContext.(HandlerType) -> Unit,
 		): Handler = Handler(
 			predicate = { field.get(it) != null },
 			command = null,
 			handle = { handle(field.get(it)!!) },
 		)
 
-		override fun message(handler: suspend (Message) -> Unit) {
+		override fun message(handler: suspend BotContext.(Message) -> Unit) {
 			handlers += Handler(Update::message, handler)
 		}
 
-		override fun editedMessage(handler: suspend (Message) -> Unit) {
+		override fun editedMessage(handler: suspend BotContext.(Message) -> Unit) {
 			handlers += Handler(Update::editedMessage, handler)
 		}
 
-		override fun channelPost(handler: suspend (Message) -> Unit) {
+		override fun channelPost(handler: suspend BotContext.(Message) -> Unit) {
 			handlers += Handler(Update::channelPost, handler)
 		}
 
-		override fun editedChannelPost(handler: suspend (Message) -> Unit) {
+		override fun editedChannelPost(handler: suspend BotContext.(Message) -> Unit) {
 			handlers += Handler(Update::editedChannelPost, handler)
 		}
 
-		override fun businessConnection(handler: suspend (BusinessConnection) -> Unit) {
+		override fun businessConnection(handler: suspend BotContext.(BusinessConnection) -> Unit) {
 			handlers += Handler(Update::businessConnection, handler)
 		}
 
-		override fun businessMessage(handler: suspend (Message) -> Unit) {
+		override fun businessMessage(handler: suspend BotContext.(Message) -> Unit) {
 			handlers += Handler(Update::businessMessage, handler)
 		}
 
-		override fun editedBusinessMessage(handler: suspend (Message) -> Unit) {
+		override fun editedBusinessMessage(handler: suspend BotContext.(Message) -> Unit) {
 			handlers += Handler(Update::editedBusinessMessage, handler)
 		}
 
-		override fun deletedBusinessMessages(handler: suspend (BusinessMessagesDeleted) -> Unit) {
+		override fun deletedBusinessMessages(handler: suspend BotContext.(BusinessMessagesDeleted) -> Unit) {
 			handlers += Handler(Update::deletedBusinessMessages, handler)
 		}
 
-		override fun chatBoost(handler: suspend (ChatBoostUpdated) -> Unit) {
+		override fun chatBoost(handler: suspend BotContext.(ChatBoostUpdated) -> Unit) {
 			handlers += Handler(Update::chatBoost, handler)
 		}
 
-		override fun removedChatBoost(handler: suspend (ChatBoostRemoved) -> Unit) {
+		override fun removedChatBoost(handler: suspend BotContext.(ChatBoostRemoved) -> Unit) {
 			handlers += Handler(Update::removedChatBoost, handler)
 		}
 
-		override fun callbackQuery(handler: suspend (CallbackQuery) -> Unit) {
+		override fun callbackQuery(handler: suspend BotContext.(CallbackQuery) -> Unit) {
 			handlers += Handler(Update::callbackQuery, handler)
 		}
 
-		override fun command(text: String, description: String?, handler: suspend (Message) -> Unit) {
+		override fun command(text: String, description: String?, handler: suspend BotContext.(Message) -> Unit) {
 			handlers += Handler(
 				predicate = { update ->
 					val entities = update.message?.entities
