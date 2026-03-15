@@ -17,11 +17,14 @@
 package opensavvy.telegram.sdk
 
 import kotlinx.coroutines.*
+import kotlinx.coroutines.selects.SelectClause0
+import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import opensavvy.telegram.entity.*
 import opensavvy.telegram.sdk.BotRouter.HandlerContext
 import kotlin.reflect.KProperty1
+import kotlin.time.Duration
 
 interface BotRouter {
 
@@ -97,6 +100,242 @@ interface BotRouter {
 		 */
 		suspend fun Message.awaitReply(): Message =
 			awaitUpdate { it.message?.replyTo?.id == this.id }.message!!
+
+		/**
+		 * Asynchronously waits for one of the selected events.
+		 *
+		 * The first event to occur is executed. The others are not.
+		 *
+		 * ### Example
+		 *
+		 * ```kotlin
+		 * bot.poll {
+		 *     command("/choose") {
+		 *         val announce = it.reply(
+		 *             text = "Choose a pill:",
+		 *             replyMarkup = InlineKeyboardMarkup(
+		 *                 InlineKeyboardButton("Red", callbackData = "red"),
+		 *                 InlineKeyboardButton("Blue", callbackData = "blue")
+		 *             )
+		 *         )
+		 *
+		 *         selectFirst {
+		 *             timeout(2.minutes) {
+		 *                 announce.edit("You took too long…")
+		 *             }
+		 *
+		 *             announce.callbackQuery("red") {
+		 *                 announce.edit("You chose red!")
+		 *             }
+		 *
+		 *             announce.callbackQuery("blue") {
+		 *                 announce.edit("You chose blue!")
+		 *             }
+		 *         }
+		 *     }
+		 * }
+		 * ```
+		 *
+		 * @see HandlerSelectBuilder The different events that can be selected.
+		 */
+		suspend fun <T> selectFirst(
+			builder: HandlerSelectBuilder<T>.() -> Unit,
+		): T
+	}
+
+	/**
+	 * The different events that can be waited for in [HandlerContext.selectFirst].
+	 */
+	interface HandlerSelectBuilder<T> : BotContext {
+
+		/**
+		 * Waits for [clause], from the KotlinX.Coroutines [select] DSL.
+		 * This is useful to wait on arbitrary coroutines.
+		 *
+		 * ### Example
+		 *
+		 * ```kotlin
+		 * bot.poll {
+		 *     command("/start") {
+		 *         coroutineScope {
+		 *             val job = launch {
+		 *                 initialzeDB()
+		 *             }
+		 *
+		 *             selectFirst {
+		 *                 on(job.onJoin) {
+		 *                     // …
+		 *                 }
+		 *
+		 *                 it.reply {
+		 *                     // …
+		 *                 }
+		 *             }
+		 *         }
+		 *     }
+		 * }
+		 * ```
+		 */
+		fun on(clause: SelectClause0, handler: suspend HandlerContext.() -> T)
+
+		/**
+		 * Waits until [timeout] time has elapsed.
+		 *
+		 * ### Example
+		 *
+		 * ```kotlin
+		 * bot.poll {
+		 *     command("/speed") {
+		 *         val announce = it.reply("Be quick!")
+		 *
+		 *         selectFirst {
+		 *             timeout(5.seconds) {
+		 *                 announce.reply("You weren't fast enough…")
+		 *             }
+		 *
+		 *             announce.reply {
+		 *                 it.reply("Congrats!")
+		 *             }
+		 *         }
+		 *     }
+		 * }
+		 * ```
+		 */
+		fun timeout(timeout: Duration, handler: suspend HandlerContext.() -> T)
+
+		/**
+		 * Waits until an [Update] matching [predicate] is received.
+		 *
+		 * ### Example
+		 *
+		 * ```kotlin
+		 * bot.poll {
+		 *     command("/speed") {
+		 *         val announce = it.reply("Quick! Edit a message, any message!")
+		 *
+		 *         selectFirst {
+		 *             timeout(5.seconds) {
+		 *                 announce.reply("You weren't fast enough…")
+		 *             }
+		 *
+		 *             update({ it.editedMessage?.chat?.id == announce.chat.id }) {
+		 *                 it.reply("Congrats! This was the first edited message!")
+		 *             }
+		 *         }
+		 *     }
+		 * }
+		 * ```
+		 */
+		fun update(
+			predicate: (Update) -> Boolean,
+			handler: suspend HandlerContext.(Update) -> T,
+		)
+
+		/**
+		 * Waits until someone replies to this message.
+		 *
+		 * ### Example
+		 *
+		 * ```kotlin
+		 * bot.poll {
+		 *     command("/speed") {
+		 *         val optionA = it.reply("Choose a message… This one?")
+		 *         val optionB = it.reply("…or this one?")
+		 *
+		 *         val repliedTo = selectFirst {
+		 *             optionA.reply {
+		 *                 it.reply("Noted, it's the first one.")
+		 *                 it
+		 *             }
+		 *
+		 *             optionB.reply {
+		 *                 it.reply("Noted, it's the second one.")
+		 *                 it
+		 *             }
+		 *         }
+		 *     }
+		 * }
+		 * ```
+		 */
+		fun Message.reply(handler: suspend HandlerContext.(Message) -> T) =
+			update(
+				predicate = { it.message?.replyTo?.id == this.id },
+				handler = { handler(it.message!!) },
+			)
+
+		/**
+		 * Waits until someone clicks on any button of this message.
+		 *
+		 * ### Example
+		 *
+		 * ```kotlin
+		 * bot.poll {
+		 *     command("/choose") {
+		 *         val announce = it.reply(
+		 *             text = "Choose a pill:",
+		 *             replyMarkup = InlineKeyboardMarkup(
+		 *                 InlineKeyboardButton("Red", callbackData = "red"),
+		 *                 InlineKeyboardButton("Blue", callbackData = "blue")
+		 *             )
+		 *         )
+		 *
+		 *         selectFirst {
+		 *             timeout(2.minutes) {
+		 *                 announce.edit("You took too long.")
+		 *             }
+		 *
+		 *             announce.callbackQuery {
+		 *                 announce.edit("You chose ${it.data}!")
+		 *             }
+		 *         }
+		 *     }
+		 * }
+		 * ```
+		 */
+		fun Message.callbackQuery(handler: suspend HandlerContext.(CallbackQuery) -> T) =
+			update(
+				predicate = { (it.callbackQuery?.message as? Message)?.id == this.id },
+				handler = { handler(it.callbackQuery!!) },
+			)
+
+		/**
+		 * Waits until someone clicks on the button with the specified [data] on this message.
+		 *
+		 * ### Example
+		 *
+		 * ```kotlin
+		 * bot.poll {
+		 *     command("/choose") {
+		 *         val announce = it.reply(
+		 *             text = "Choose a pill:",
+		 *             replyMarkup = InlineKeyboardMarkup(
+		 *                 InlineKeyboardButton("Red", callbackData = "red"),
+		 *                 InlineKeyboardButton("Blue", callbackData = "blue")
+		 *             )
+		 *         )
+		 *
+		 *         selectFirst {
+		 *             timeout(2.minutes) {
+		 *                 announce.edit("You took too long…")
+		 *             }
+		 *
+		 *             announce.callbackQuery("red") {
+		 *                 announce.edit("You chose red!")
+		 *             }
+		 *
+		 *             announce.callbackQuery("blue") {
+		 *                 announce.edit("You chose blue!")
+		 *             }
+		 *         }
+		 *     }
+		 * }
+		 * ```
+		 */
+		fun Message.callbackQuery(data: String, handler: suspend HandlerContext.(CallbackQuery) -> T) =
+			update(
+				predicate = { (it.callbackQuery?.message as? Message)?.id == this.id && it.callbackQuery?.data == data },
+				handler = { handler(it.callbackQuery!!) },
+			)
 	}
 }
 
@@ -248,6 +487,50 @@ internal class DefaultBotRouter(
 			}
 
 			return result.await()
+		}
+
+		override suspend fun <T> selectFirst(builder: BotRouter.HandlerSelectBuilder<T>.() -> Unit): T = coroutineScope {
+			val clauseBuilder = HandlerSelectBuilderImpl<T>(this)
+				.apply(builder)
+
+			select {
+				for ((clause, handler) in clauseBuilder.clauses) {
+					clause {
+						handler()
+					}
+				}
+			}
+		}
+
+		private inner class HandlerSelectBuilderImpl<T>(
+			private val scope: CoroutineScope,
+		) : BotRouter.HandlerSelectBuilder<T>, BotContext by botContext {
+
+			val clauses = ArrayList<Pair<SelectClause0, suspend HandlerContext.() -> T>>()
+
+			override fun on(clause: SelectClause0, handler: suspend HandlerContext.() -> T) {
+				clauses += clause to handler
+			}
+
+			override fun timeout(timeout: Duration, handler: suspend HandlerContext.() -> T) {
+				val job = Job(scope.coroutineContext.job)
+				scope.launch {
+					delay(timeout)
+					job.complete()
+				}
+				clauses += job.onJoin to handler
+			}
+
+			override fun update(predicate: (Update) -> Boolean, handler: suspend HandlerContext.(Update) -> T) {
+				val deferred = scope.async {
+					awaitUpdate(predicate)
+				}
+				val completionHandler: suspend HandlerContext.() -> T = {
+					// If we reach this point, 'deferred' is guaranteed to have finished, so '.await' is free
+					handler(deferred.await())
+				}
+				clauses += deferred.onJoin to completionHandler
+			}
 		}
 	}
 

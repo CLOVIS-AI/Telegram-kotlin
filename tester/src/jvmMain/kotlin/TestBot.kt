@@ -21,6 +21,8 @@ import opensavvy.telegram.entity.InlineKeyboardButton
 import opensavvy.telegram.entity.InlineKeyboardMarkup
 import opensavvy.telegram.entity.Message
 import opensavvy.telegram.sdk.TelegramBot
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 
 fun main() = runBlocking {
 	val bot = TelegramBot.create(
@@ -65,6 +67,28 @@ fun main() = runBlocking {
 			(it.message as Message).edit(
 				text = "Well done, you clicked the button!"
 			)
+		}
+
+		command("/speed_test") { msg ->
+			val announce = msg.reply(
+				text = "Quick, you have 5 seconds to reply to this message!",
+				replyMarkup = InlineKeyboardMarkup(InlineKeyboardButton("Stop", callbackData = "stop")),
+			)
+			val start = TimeSource.Monotonic.markNow()
+
+			selectFirst {
+				timeout(5.seconds) {
+					msg.reply("Oh no, you failed :/")
+				}
+
+				announce.reply {
+					it.reply("Congrats! You replied in ${start.elapsedNow()}.")
+				}
+
+				announce.callbackQuery("stop") {
+					announce.edit("Cancelled by ${it.user.firstName}.")
+				}
+			}
 		}
 
 		message {
