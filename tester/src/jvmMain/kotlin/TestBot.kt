@@ -38,8 +38,12 @@ fun main() = runBlocking {
 		command("/start", description = "Start discussing with this bot!") { msg ->
 			println(" • ${msg.from?.username} started the bot!")
 
-			msg.reply(
-				text = "Hello, ${msg.from?.username}!",
+			val hello = msg.reply(
+				text = "Hello, ${msg.from?.username}!\n\nReply to this message to get a surprise…",
+			)
+
+			hello.awaitReply().reply(
+				text = "Surprise!",
 			)
 		}
 

@@ -16,8 +16,9 @@
 
 package opensavvy.telegram.sdk
 
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import opensavvy.telegram.entity.*
 import opensavvy.telegram.sdk.BotRouter.HandlerContext
 import kotlin.reflect.KProperty1
@@ -53,18 +54,66 @@ interface BotRouter {
 		fun callbackQuery(handler: suspend HandlerContext.(CallbackQuery) -> Unit)
 	}
 
-	interface HandlerContext : BotContext
+	interface HandlerContext : BotContext {
+
+		/**
+		 * Asynchronously wait for a user to reply to the message, and returns their reply.
+		 *
+		 * ### Example
+		 *
+		 * ```kotlin
+		 * bot.poll {
+		 *     command("/start") {
+		 *         val msg = it.reply("Reply to me!")
+		 *
+		 *         // Wait for the user to reply to 'msg'
+		 *         msg.awaitReply()
+		 *         //  Reply to their new message
+		 *             .reply("Ahah, thanks for replying!")
+		 *     }
+		 * }
+		 * ```
+		 */
+		suspend fun Message.awaitReply(): Message
+	}
 }
 
-internal class DefaultBotRouter : BotRouter {
-	private val handlers = ArrayList<Handler>()
+internal class DefaultBotRouter(
+	private val handlerScope: CoroutineScope,
+) : BotRouter {
+	private val staticHandlers = ArrayList<Handler>()
+
+	private val dynamicHandlers = HashSet<Handler>()
+	private val dynamicHandlersLock = Mutex()
+
+	private suspend fun findDynamicHandler(update: Update): Handler? = dynamicHandlersLock.withLock("route-${update.id}") {
+		println("Trying to route update $update\n  with dynamic handlers: $dynamicHandlers")
+
+		val iter = dynamicHandlers.iterator()
+		while (iter.hasNext()) {
+			val handler = iter.next()
+
+			if (handler.registration?.isActive == false) {
+				iter.remove()
+			}
+
+			if (handler.predicate(update)) {
+				iter.remove()
+				return handler
+			}
+		}
+		null
+	}
+
+	private fun findStaticHandlerFor(update: Update): Handler? =
+		staticHandlers.firstOrNull { it.predicate(update) }
 
 	override suspend fun route(update: Update, context: BotContext) {
-		val handler = handlers.firstOrNull { it.predicate(update) }
+		val handler = findDynamicHandler(update)
+			?: findStaticHandlerFor(update)
 			?: run { println("Ignored un-handled update $update"); return }
 
-		val handlerContext = object : HandlerContext,
-			BotContext by context {}
+		val handlerContext = HandlerContextImpl(context)
 
 		handlerScope.launch {
 			try {
@@ -82,6 +131,7 @@ internal class DefaultBotRouter : BotRouter {
 		val predicate: (Update) -> Boolean,
 		val command: BotCommand?,
 		val handle: suspend HandlerContext.(Update) -> Unit,
+		val registration: Job? = null,
 	)
 
 	private inner class Builder : BotRouter.Builder {
@@ -95,51 +145,51 @@ internal class DefaultBotRouter : BotRouter {
 		)
 
 		override fun message(handler: suspend HandlerContext.(Message) -> Unit) {
-			handlers += Handler(Update::message, handler)
+			staticHandlers += Handler(Update::message, handler)
 		}
 
 		override fun editedMessage(handler: suspend HandlerContext.(Message) -> Unit) {
-			handlers += Handler(Update::editedMessage, handler)
+			staticHandlers += Handler(Update::editedMessage, handler)
 		}
 
 		override fun channelPost(handler: suspend HandlerContext.(Message) -> Unit) {
-			handlers += Handler(Update::channelPost, handler)
+			staticHandlers += Handler(Update::channelPost, handler)
 		}
 
 		override fun editedChannelPost(handler: suspend HandlerContext.(Message) -> Unit) {
-			handlers += Handler(Update::editedChannelPost, handler)
+			staticHandlers += Handler(Update::editedChannelPost, handler)
 		}
 
 		override fun businessConnection(handler: suspend HandlerContext.(BusinessConnection) -> Unit) {
-			handlers += Handler(Update::businessConnection, handler)
+			staticHandlers += Handler(Update::businessConnection, handler)
 		}
 
 		override fun businessMessage(handler: suspend HandlerContext.(Message) -> Unit) {
-			handlers += Handler(Update::businessMessage, handler)
+			staticHandlers += Handler(Update::businessMessage, handler)
 		}
 
 		override fun editedBusinessMessage(handler: suspend HandlerContext.(Message) -> Unit) {
-			handlers += Handler(Update::editedBusinessMessage, handler)
+			staticHandlers += Handler(Update::editedBusinessMessage, handler)
 		}
 
 		override fun deletedBusinessMessages(handler: suspend HandlerContext.(BusinessMessagesDeleted) -> Unit) {
-			handlers += Handler(Update::deletedBusinessMessages, handler)
+			staticHandlers += Handler(Update::deletedBusinessMessages, handler)
 		}
 
 		override fun chatBoost(handler: suspend HandlerContext.(ChatBoostUpdated) -> Unit) {
-			handlers += Handler(Update::chatBoost, handler)
+			staticHandlers += Handler(Update::chatBoost, handler)
 		}
 
 		override fun removedChatBoost(handler: suspend HandlerContext.(ChatBoostRemoved) -> Unit) {
-			handlers += Handler(Update::removedChatBoost, handler)
+			staticHandlers += Handler(Update::removedChatBoost, handler)
 		}
 
 		override fun callbackQuery(handler: suspend HandlerContext.(CallbackQuery) -> Unit) {
-			handlers += Handler(Update::callbackQuery, handler)
+			staticHandlers += Handler(Update::callbackQuery, handler)
 		}
 
 		override fun command(text: String, description: String?, handler: suspend HandlerContext.(Message) -> Unit) {
-			handlers += Handler(
+			staticHandlers += Handler(
 				predicate = { update ->
 					val entities = update.message?.entities
 						?.filterIsInstance<MessageEntity.BotCommand>()
@@ -155,13 +205,38 @@ internal class DefaultBotRouter : BotRouter {
 		}
 	}
 
+	private inner class HandlerContextImpl(
+		private val botContext: BotContext,
+	) : HandlerContext, BotContext by botContext {
+
+		override suspend fun Message.awaitReply(): Message {
+			val result = CompletableDeferred<Message>(currentCoroutineContext().job)
+
+			val handler = Handler(
+				predicate = { it.message?.replyTo?.id == this.id },
+				command = null,
+				handle = {
+					result.complete(it.message!!)
+				},
+				registration = result,
+			)
+
+			dynamicHandlersLock.withLock("reply-${this.chat.id}-${this.id}") {
+				println("Registering dynamic handler: $handler")
+				dynamicHandlers += handler
+			}
+
+			return result.await()
+		}
+	}
+
 	internal fun builder(): BotRouter.Builder = Builder()
 
 	/**
 	 * Calls [TelegramBot.setMyCommands] for each command that has been [registered][BotRouter.Builder.command].
 	 */
 	internal suspend fun registerCommands(bot: TelegramBot) {
-		val commands = handlers.mapNotNull { it.command }
+		val commands = staticHandlers.mapNotNull { it.command }
 
 		bot.setMyCommands(
 			SetMyCommandsParams(
