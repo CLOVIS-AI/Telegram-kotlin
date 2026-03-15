@@ -89,4 +89,70 @@ interface BotContext {
 		)
 	}
 
+	/**
+	 * Convenience function to edit a message.
+	 *
+	 * ### Example
+	 *
+	 * ```kotlin
+	 * bot.poll {
+	 *     command("/click-here") { msg ->
+	 *         msg.reply(
+	 *             text = "Click here!",
+	 *             replyMarkup = InlineKeyboardMarkup(
+	 *                 InlineKeyboardButton("Click me", callbackData = "click")
+	 *             )
+	 *         )
+	 *     }
+	 *
+	 *     callbackQuery { query ->
+	 *         (query.message as Message).edit(
+	 *             text = "Clicked!"
+	 *         )
+	 *     }
+	 * }
+	 * ```
+	 *
+	 * The callback query could be rewritten without this function as:
+	 * ```kotlin
+	 * bot.poll {
+	 *     command("/click-here") { … }
+	 *
+	 *     callbackQuery { query ->
+	 *         val message = query.message as Message
+	 *
+	 *         bot.editMessageText(
+	 *             chat = message.chat.id,
+	 *             messageId = message.id,
+	 *             text = "Clicked!",
+	 *         )
+	 *     }
+	 * }
+	 * ```
+	 *
+	 * @see TelegramBot.editMessageText
+	 */
+	@IgnorableReturnValue
+	suspend fun Message.edit(
+		text: String,
+		inlineMessageId: String? = null,
+		parseMode: String? = null,
+		entities: List<MessageEntity>? = null,
+		linkPreviewOptions: LinkPreviewOptions? = null,
+		replyMarkup: InlineKeyboardMarkup? = null,
+		businessConnectionId: BusinessConnection.Id? = null,
+	): Message {
+		return bot.editMessageText(
+			chat = this.chat.id,
+			messageId = this.id,
+			text = text,
+			inlineMessageId = inlineMessageId,
+			parseMode = parseMode,
+			entities = entities,
+			linkPreviewOptions = linkPreviewOptions,
+			replyMarkup = replyMarkup,
+			businessConnectionId = businessConnectionId,
+		)
+	}
+
 }
