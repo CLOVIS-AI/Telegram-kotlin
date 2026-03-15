@@ -21,7 +21,6 @@ import opensavvy.telegram.entity.Chat
 import opensavvy.telegram.entity.InlineKeyboardButton
 import opensavvy.telegram.entity.InlineKeyboardMarkup
 import opensavvy.telegram.entity.Message
-import opensavvy.telegram.entity.ReplyParameters
 import opensavvy.telegram.sdk.TelegramBot
 
 fun main() = runBlocking {
@@ -37,19 +36,16 @@ fun main() = runBlocking {
 	println(bot.getMe())
 
 	bot.poll {
-		command("/start", description = "Start discussing with this bot!") {
-			println(" • ${it.from?.username} started the bot!")
+		command("/start", description = "Start discussing with this bot!") { msg ->
+			println(" • ${msg.from?.username} started the bot!")
 
-			bot.sendMessage(
-				chat = it.chat.id,
-				text = "Hello, ${it.from?.username}!",
-				reply = ReplyParameters(it.id),
+			msg.reply(
+				text = "Hello, ${msg.from?.username}!",
 			)
 		}
 
-		command("/buttons", description = "Display multiple buttons") {
-			bot.sendMessage(
-				chat = it.chat.id,
+		command("/buttons", description = "Display multiple buttons") { msg ->
+			msg.reply(
 				text = "Here are a few buttons!",
 				replyMarkup = InlineKeyboardMarkup(
 					listOf(
