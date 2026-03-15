@@ -57,6 +57,27 @@ interface BotRouter {
 	interface HandlerContext : BotContext {
 
 		/**
+		 * Asynchronously wait for an update that matches [predicate].
+		 *
+		 * ### Example
+		 *
+		 * ```kotlin
+		 * bot.poll {
+		 *     command("/start") {
+		 *         val msg = it.reply("Who will be the first to post a message?")
+		 *
+		 *         val nextMessage = awaitUpdate { it.message != null }.message!!
+		 *
+		 *         nextMessage.reply("Congrats, this message won!")
+		 *     }
+		 * }
+		 * ```
+		 */
+		suspend fun awaitUpdate(
+			predicate: (Update) -> Boolean,
+		): Update
+
+		/**
 		 * Asynchronously wait for a user to reply to the message, and returns their reply.
 		 *
 		 * ### Example
@@ -74,7 +95,8 @@ interface BotRouter {
 		 * }
 		 * ```
 		 */
-		suspend fun Message.awaitReply(): Message
+		suspend fun Message.awaitReply(): Message =
+			awaitUpdate { it.message?.replyTo?.id == this.id }.message!!
 	}
 }
 
@@ -209,20 +231,19 @@ internal class DefaultBotRouter(
 		private val botContext: BotContext,
 	) : HandlerContext, BotContext by botContext {
 
-		override suspend fun Message.awaitReply(): Message {
-			val result = CompletableDeferred<Message>(currentCoroutineContext().job)
+		override suspend fun awaitUpdate(predicate: (Update) -> Boolean): Update {
+			val result = CompletableDeferred<Update>(currentCoroutineContext().job)
 
 			val handler = Handler(
-				predicate = { it.message?.replyTo?.id == this.id },
+				predicate = predicate,
 				command = null,
 				handle = {
-					result.complete(it.message!!)
+					result.complete(it)
 				},
 				registration = result,
 			)
 
-			dynamicHandlersLock.withLock("reply-${this.chat.id}-${this.id}") {
-				println("Registering dynamic handler: $handler")
+			dynamicHandlersLock.withLock("awaitUpdate($predicate)") {
 				dynamicHandlers += handler
 			}
 
