@@ -66,13 +66,15 @@ internal class DefaultBotRouter : BotRouter {
 		val handlerContext = object : HandlerContext,
 			BotContext by context {}
 
-		try {
-			with(handler) {
-				handlerContext.handle(update)
+		handlerScope.launch {
+			try {
+				with(handler) {
+					handlerContext.handle(update)
+				}
+			} catch (e: Exception) {
+				currentCoroutineContext().ensureActive()
+				println("Error while handling update ${update.id}\n$update\n${e.stackTraceToString()}")
 			}
-		} catch (e: Exception) {
-			currentCoroutineContext().ensureActive()
-			println("Error while handling update ${update.id}\n$update\n${e.stackTraceToString()}")
 		}
 	}
 
