@@ -21,6 +21,7 @@ import opensavvy.telegram.entity.InlineKeyboardButton
 import opensavvy.telegram.entity.InlineKeyboardMarkup
 import opensavvy.telegram.entity.Message
 import opensavvy.telegram.sdk.TelegramBot
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
@@ -89,6 +90,56 @@ fun main() = runBlocking {
 					announce.edit("Cancelled by ${it.user.firstName}.")
 				}
 			}
+		}
+
+		command("/counter") {
+			var count = 0
+
+			val buttons = InlineKeyboardMarkup(
+				listOf(
+					listOf(
+						InlineKeyboardButton("-", callbackData = "-"),
+						InlineKeyboardButton("+", callbackData = "+"),
+					),
+					listOf(
+						InlineKeyboardButton("Stop", callbackData = "stop"),
+					),
+				)
+			)
+
+			val msg = bot.sendMessage(
+				chat = it.chat.id,
+				text = "0",
+				replyMarkup = buttons,
+			)
+
+			selectUntilStopped {
+				timeout(60.minutes) {
+					stop()
+				}
+
+				msg.callbackQuery("stop") {
+					println("'stop' button pressed")
+					stop()
+				}
+
+				msg.callbackQuery { query ->
+					println("'${query.data}' pressed")
+
+					when (query.data) {
+						"-" -> count--
+						"+" -> count++
+					}
+
+					msg.edit(
+						text = count.toString(),
+						replyMarkup = buttons,
+					)
+				}
+			}
+
+			println("Done!")
+			msg.edit(text = "Final count: $count")
 		}
 
 		message {

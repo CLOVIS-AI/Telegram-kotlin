@@ -25,6 +25,7 @@ import opensavvy.telegram.entity.*
 import opensavvy.telegram.sdk.BotRouter.HandlerContext
 import kotlin.reflect.KProperty1
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 interface BotRouter {
 
@@ -141,6 +142,58 @@ interface BotRouter {
 		suspend fun <T> selectFirst(
 			builder: HandlerSelectBuilder<T>.() -> Unit,
 		): T
+
+		/**
+		 * Asynchronously waits for one of the selected events, in a loop, until [stop][StoppableHandlerSelectBuilder.stop] is called.
+		 *
+		 * Each event is executed sequentially.
+		 *
+		 * ### Example
+		 *
+		 * ```kotlin
+		 * bot.poll {
+		 *     command("/counter") {
+		 *         var count = 0
+		 *
+		 *         val buttons = InlineKeyboardMarkup(
+		 *             InlineKeyboardButton("-", callbackData = "-"),
+		 *             InlineKeyboardButton("+", callbackData = "+"),
+		 *         )
+		 *
+		 *         val msg = it.reply(
+		 *             text = "Counter: $count",
+		 *             replyMarkup = buttons,
+		 *         )
+		 *
+		 *         // Loops forever, until 'stop' is called
+		 *         selectUntilStopped {
+		 *             timeout(60.minutes) {
+		 *                 stop()
+		 *             }
+		 *
+		 *             msg.callbackQuery {
+		 *                 when (query.data) {
+		 *                     "-" -> count--
+		 *                     "+" -> count++
+		 *                 }
+		 *
+		 *                 msg.edit(
+		 *                     text = "Counter: $count",
+		 *                     replyMarkup = buttons,
+		 *                 )
+		 *             }
+		 *         }
+		 *
+		 *         msg.edit(text = "Final count: $count")
+		 *     }
+		 * }
+		 * ```
+		 *
+		 * @see StoppableHandlerSelectBuilder The different events that can be selected.
+		 */
+		suspend fun selectUntilStopped(
+			builder: StoppableHandlerSelectBuilder.() -> Unit,
+		)
 	}
 
 	/**
@@ -337,6 +390,19 @@ interface BotRouter {
 				handler = { handler(it.callbackQuery!!) },
 			)
 	}
+
+	/**
+	 * The different events that can be waited for in [HandlerContext.selectUntilStopped].
+	 */
+	interface StoppableHandlerSelectBuilder : HandlerSelectBuilder<Unit> {
+
+		/**
+		 * Call this method to stop waiting for new events.
+		 *
+		 * For more information, see [HandlerContext.selectUntilStopped].
+		 */
+		suspend fun stop(): Nothing
+	}
 }
 
 internal class DefaultBotRouter(
@@ -344,12 +410,10 @@ internal class DefaultBotRouter(
 ) : BotRouter {
 	private val staticHandlers = ArrayList<Handler>()
 
-	private val dynamicHandlers = HashSet<Handler>()
+	private val dynamicHandlers = ArrayList<Handler>()
 	private val dynamicHandlersLock = Mutex()
 
 	private suspend fun findDynamicHandler(update: Update): Handler? = dynamicHandlersLock.withLock("route-${update.id}") {
-		println("Trying to route update $update\n  with dynamic handlers: $dynamicHandlers")
-
 		val iter = dynamicHandlers.iterator()
 		while (iter.hasNext()) {
 			val handler = iter.next()
@@ -494,7 +558,8 @@ internal class DefaultBotRouter(
 				.apply(builder)
 
 			select {
-				for ((clause, handler) in clauseBuilder.clauses) {
+				for (clauseFactory in clauseBuilder.clauses) {
+					val (clause, handler) = clauseFactory()
 					clause {
 						handler()
 					}
@@ -502,34 +567,80 @@ internal class DefaultBotRouter(
 			}
 		}
 
+		override suspend fun selectUntilStopped(builder: BotRouter.StoppableHandlerSelectBuilder.() -> Unit) = supervisorScope {
+			val lifecycle = this
+
+			val clauseBuilder = HandlerSelectBuilderImpl<Unit>(lifecycle)
+
+			val stoppableClauseBuilder = object : BotRouter.StoppableHandlerSelectBuilder,
+				BotRouter.HandlerSelectBuilder<Unit> by clauseBuilder {
+
+				override suspend fun stop(): Nothing {
+					lifecycle.coroutineContext.job.cancelChildren(CancellationException("stop() has been called"))
+					currentCoroutineContext().ensureActive() // will always throw a CCE
+					error("This can never happen, 'ensureActive' will always throw a CCE")
+				}
+			}
+
+			stoppableClauseBuilder.builder()
+
+			// Prevent two handlers from running concurrently
+			val lock = Mutex()
+
+			for (clauseFactory in clauseBuilder.clauses) {
+				lifecycle.launch {
+					while (isActive) {
+						val (clause, handler) = clauseFactory()
+						select {
+							clause {
+								lock.withLock {
+									handler()
+								}
+							}
+						}
+					}
+				}
+				delay(10.milliseconds)
+			}
+
+			// due to the surrounding 'supervisorScope', this automatically waits for all jobs to finish cancelling
+		}
+
 		private inner class HandlerSelectBuilderImpl<T>(
 			private val scope: CoroutineScope,
 		) : BotRouter.HandlerSelectBuilder<T>, BotContext by botContext {
 
-			val clauses = ArrayList<Pair<SelectClause0, suspend HandlerContext.() -> T>>()
+			/**
+			 * A list of factories that return a clause and a handler.
+			 */
+			val clauses = ArrayList<() -> Pair<SelectClause0, suspend HandlerContext.() -> T>>()
 
 			override fun on(clause: SelectClause0, handler: suspend HandlerContext.() -> T) {
-				clauses += clause to handler
+				clauses += { clause to handler }
 			}
 
 			override fun timeout(timeout: Duration, handler: suspend HandlerContext.() -> T) {
-				val job = Job(scope.coroutineContext.job)
-				scope.launch {
-					delay(timeout)
-					job.complete()
+				clauses += {
+					val job = Job(scope.coroutineContext.job)
+					scope.launch {
+						delay(timeout)
+						job.complete()
+					}
+					job.onJoin to handler
 				}
-				clauses += job.onJoin to handler
 			}
 
 			override fun update(predicate: (Update) -> Boolean, handler: suspend HandlerContext.(Update) -> T) {
-				val deferred = scope.async {
-					awaitUpdate(predicate)
+				clauses += {
+					val deferred = scope.async {
+						awaitUpdate(predicate)
+					}
+					val completionHandler: suspend HandlerContext.() -> T = {
+						// If we reach this point, 'deferred' is guaranteed to have finished, so '.await' is free
+						handler(deferred.await())
+					}
+					deferred.onJoin to completionHandler
 				}
-				val completionHandler: suspend HandlerContext.() -> T = {
-					// If we reach this point, 'deferred' is guaranteed to have finished, so '.await' is free
-					handler(deferred.await())
-				}
-				clauses += deferred.onJoin to completionHandler
 			}
 		}
 	}
