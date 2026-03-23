@@ -162,6 +162,11 @@ class TelegramBot internal constructor(
 
 		router.registerCommands(this)
 
+		val context = object : BotContext {
+			override val bot: TelegramBot
+				get() = this@TelegramBot
+		}
+
 		var lastUpdateId: Update.Id? = null
 		while (currentCoroutineContext().isActive) {
 			val updates = try {
@@ -172,7 +177,7 @@ class TelegramBot internal constructor(
 
 			for (update in updates) {
 				lastUpdateId = update.id
-				router.route(update)
+				router.route(update, context)
 			}
 		}
 	}
