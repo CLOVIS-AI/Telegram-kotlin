@@ -24,8 +24,10 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withContext
 import opensavvy.telegram.entity.*
 import opensavvy.telegram.entity.serialization.TelegramJson
 import kotlin.time.Duration
@@ -159,11 +161,11 @@ class TelegramBot internal constructor(
 		)
 	)
 
-	suspend fun poll(block: BotRouter.Builder.() -> Unit) {
-		val router = DefaultBotRouter()
+	suspend fun poll(block: BotRouter.Builder.() -> Unit) = withContext(Dispatchers.Default) {
+		val router = DefaultBotRouter(this)
 		router.builder().apply(block)
 
-		router.registerCommands(this)
+		router.registerCommands(this@TelegramBot)
 
 		val context = object : BotContext {
 			override val bot: TelegramBot

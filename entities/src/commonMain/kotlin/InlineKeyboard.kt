@@ -31,7 +31,25 @@ data class InlineKeyboardMarkup(
 	/** Array of button rows, each represented by an array of [InlineKeyboardButton] objects. */
 	@SerialName("inline_keyboard")
 	val inlineKeyboard: List<List<InlineKeyboardButton>>,
-) : NewMessageKeyboardMarkup
+) : NewMessageKeyboardMarkup {
+
+	/**
+	 * Creates a single-line keyboard with the given [buttons].
+	 *
+	 * ### Example
+	 *
+	 * ```kotlin
+	 * bot.sendMessage(
+	 *     // …
+	 *     reply = InlineKeyboardMarkup(
+	 *         InlineKeyboardButton("Button 1", callbackData = "1"),
+	 *         InlineKeyboardButton("Button 2", callbackData = "2"),
+	 *     ),
+	 * )
+	 * ```
+	 */
+	constructor(vararg buttons: InlineKeyboardButton) : this(listOf(buttons.asList()))
+}
 
 /**
  * This object represents one button of an inline keyboard. Exactly one of the optional fields must be used

@@ -17,12 +17,13 @@
 package opensavvy.telegram.tester
 
 import kotlinx.coroutines.runBlocking
-import opensavvy.telegram.entity.Chat
 import opensavvy.telegram.entity.InlineKeyboardButton
 import opensavvy.telegram.entity.InlineKeyboardMarkup
 import opensavvy.telegram.entity.Message
-import opensavvy.telegram.entity.ReplyParameters
 import opensavvy.telegram.sdk.TelegramBot
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 
 fun main() = runBlocking {
 	val bot = TelegramBot.create(
@@ -37,19 +38,20 @@ fun main() = runBlocking {
 	println(bot.getMe())
 
 	bot.poll {
-		command("/start", description = "Start discussing with this bot!") {
-			println(" • ${it.from?.username} started the bot!")
+		command("/start", description = "Start discussing with this bot!") { msg ->
+			println(" • ${msg.from?.username} started the bot!")
 
-			bot.sendMessage(
-				chat = it.chat.id,
-				text = "Hello, ${it.from?.username}!",
-				reply = ReplyParameters(it.id),
+			val hello = msg.reply(
+				text = "Hello, ${msg.from?.username}!\n\nReply to this message to get a surprise…",
+			)
+
+			hello.awaitReply().reply(
+				text = "Surprise!",
 			)
 		}
 
-		command("/buttons", description = "Display multiple buttons") {
-			bot.sendMessage(
-				chat = it.chat.id,
+		command("/buttons", description = "Display multiple buttons") { msg ->
+			msg.reply(
 				text = "Here are a few buttons!",
 				replyMarkup = InlineKeyboardMarkup(
 					listOf(
@@ -63,12 +65,81 @@ fun main() = runBlocking {
 
 		callbackQuery {
 			println(" • ${it.user.username} pressed the button ${it.data}")
-			bot.editMessageText(
-				chat = Chat.Id(it.user.id.value),
-				messageId = (it.message as Message).id,
-				text = "Well done, you clicked the button!",
+			(it.message as Message).edit(
+				text = "Well done, you clicked the button!"
+			)
+		}
+
+		command("/speed_test") { msg ->
+			val announce = msg.reply(
+				text = "Quick, you have 5 seconds to reply to this message!",
+				replyMarkup = InlineKeyboardMarkup(InlineKeyboardButton("Stop", callbackData = "stop")),
+			)
+			val start = TimeSource.Monotonic.markNow()
+
+			selectFirst {
+				timeout(5.seconds) {
+					msg.reply("Oh no, you failed :/")
+				}
+
+				announce.reply {
+					it.reply("Congrats! You replied in ${start.elapsedNow()}.")
+				}
+
+				announce.callbackQuery("stop") {
+					announce.edit("Cancelled by ${it.user.firstName}.")
+				}
+			}
+		}
+
+		command("/counter") {
+			var count = 0
+
+			val buttons = InlineKeyboardMarkup(
+				listOf(
+					listOf(
+						InlineKeyboardButton("-", callbackData = "-"),
+						InlineKeyboardButton("+", callbackData = "+"),
+					),
+					listOf(
+						InlineKeyboardButton("Stop", callbackData = "stop"),
+					),
+				)
 			)
 
+			val msg = bot.sendMessage(
+				chat = it.chat.id,
+				text = "0",
+				replyMarkup = buttons,
+			)
+
+			selectUntilStopped {
+				timeout(60.minutes) {
+					stop()
+				}
+
+				msg.callbackQuery("stop") {
+					println("'stop' button pressed")
+					stop()
+				}
+
+				msg.callbackQuery { query ->
+					println("'${query.data}' pressed")
+
+					when (query.data) {
+						"-" -> count--
+						"+" -> count++
+					}
+
+					msg.edit(
+						text = count.toString(),
+						replyMarkup = buttons,
+					)
+				}
+			}
+
+			println("Done!")
+			msg.edit(text = "Final count: $count")
 		}
 
 		message {
