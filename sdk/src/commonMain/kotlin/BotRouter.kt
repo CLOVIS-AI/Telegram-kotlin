@@ -519,7 +519,9 @@ internal class DefaultBotRouter(
 					val entities = update.message?.entities
 						?.filterIsInstance<MessageEntity.BotCommand>()
 
-					update.message != null && entities?.any { update.message?.text(it) == text } == true
+					update.message != null && entities?.any {
+						update.message?.text(it)?.startsWith(text) ?: false
+					} == true
 				},
 				command = BotCommand(
 					command = text,
